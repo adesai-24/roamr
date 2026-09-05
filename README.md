@@ -13,6 +13,21 @@ The point isn't reach — it's the enjoyment of sharing real experiences with
 your closest friends. That could grow into something bigger later
 (public/creator profiles), but v1 is intentionally small and personal.
 
+## Platform
+
+**Web first, not a native app.** The plan had been leaning toward a
+phone-only native app, but the priority right now is getting this in front
+of friends with as little friction as possible — a link they open in a
+browser beats an app they have to install. A web app also makes testing
+trivial: push a change, share the URL, done, no TestFlight/Play Store
+review cycle in the loop.
+
+A native app (React Native/Expo, distributed via TestFlight and Play
+Internal Testing for low-friction beta installs) stays on the table as a
+later step once the product itself is proven out — mainly because that's
+what unlocks deeper native features like Apple Photos library integration
+(see the photo library note below). Not a v1 concern.
+
 ## Core loop
 
 1. Add a photo **Moment** (with an optional caption and optional pin).
@@ -96,9 +111,10 @@ These are meant to be enforced by the mechanics, not just stated:
   integration is now Picker-only (user manually selects photos each time,
   no server-side filtering by location). Effectively equivalent to a plain
   upload button.
-- Plain manual upload (device camera roll) covers all platforms today and
-  is the v1 approach. Smart suggestions from an existing library are a
-  possible future iOS-native feature.
+- Plain manual upload (device camera roll, via the browser's file picker)
+  covers all platforms today and is the v1 approach. Smart suggestions from
+  an existing library would require a native iOS app, which is a possible
+  future step, not a current one (see Platform above).
 
 ## Contributing
 
