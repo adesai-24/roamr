@@ -1,0 +1,16 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: roamr-web
+spec:
+  # Bounds *voluntary* disruption only -- node drains, cluster upgrades,
+  # descheduler evictions. It does nothing about a node dying; that is what the
+  # topology spread constraints in deployment.yaml are for.
+  #
+  # Only meaningful with 2+ replicas. With a single pod a PDB either blocks
+  # drains indefinitely or permits total downtime.
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: roamr-web
+      app.kubernetes.io/instance: roamr-web
