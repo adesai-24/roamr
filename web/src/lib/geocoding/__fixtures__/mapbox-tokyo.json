@@ -1,0 +1,35 @@
+{
+  "type": "FeatureCollection",
+  "query": ["tokyo"],
+  "features": [
+    {
+      "id": "place.9666437979919480",
+      "type": "Feature",
+      "place_type": ["place"],
+      "relevance": 1,
+      "properties": { "mapbox_id": "dXJuOm1ieHBsYzpqZ1Vz", "wikidata": "Q1490" },
+      "text": "Tokyo",
+      "place_name": "Tokyo, Tokyo, Japan",
+      "bbox": [138.942932, 35.519077, 139.910202, 35.898384],
+      "center": [139.6917, 35.6895],
+      "geometry": { "type": "Point", "coordinates": [139.6917, 35.6895] },
+      "context": [
+        {
+          "id": "region.14738169629107840",
+          "mapbox_id": "dXJuOm1ieHBsYzpNMlU0",
+          "wikidata": "Q1490",
+          "short_code": "JP-13",
+          "text": "Tokyo"
+        },
+        {
+          "id": "country.10758543595296830",
+          "mapbox_id": "dXJuOm1ieHBsYzpKUQ",
+          "wikidata": "Q17",
+          "short_code": "jp",
+          "text": "Japan"
+        }
+      ]
+    }
+  ],
+  "attribution": "NOTICE: (c) 2026 Mapbox and its suppliers. All rights reserved."
+}

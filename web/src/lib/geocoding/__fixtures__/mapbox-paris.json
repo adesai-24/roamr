@@ -1,0 +1,35 @@
+{
+  "type": "FeatureCollection",
+  "query": ["paris"],
+  "features": [
+    {
+      "id": "place.8496063527554860",
+      "type": "Feature",
+      "place_type": ["place"],
+      "relevance": 1,
+      "properties": { "mapbox_id": "dXJuOm1ieHBsYzpBOEVz", "wikidata": "Q90" },
+      "text": "Paris",
+      "place_name": "Paris, Île-de-France, France",
+      "bbox": [2.224122, 48.815573, 2.469921, 48.902156],
+      "center": [2.3522, 48.8566],
+      "geometry": { "type": "Point", "coordinates": [2.3522, 48.8566] },
+      "context": [
+        {
+          "id": "region.11154947989558580",
+          "mapbox_id": "dXJuOm1ieHBsYzpxdlEw",
+          "wikidata": "Q13917",
+          "short_code": "FR-IDF",
+          "text": "Île-de-France"
+        },
+        {
+          "id": "country.824333044853660",
+          "mapbox_id": "dXJuOm1ieHBsYzpGUg",
+          "wikidata": "Q142",
+          "short_code": "fr",
+          "text": "France"
+        }
+      ]
+    }
+  ],
+  "attribution": "NOTICE: (c) 2026 Mapbox and its suppliers. All rights reserved."
+}
