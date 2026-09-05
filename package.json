@@ -1,0 +1,17 @@
+{
+  "name": "roamr",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Tooling root for roamr. The Next.js app lives in web/; the database contract lives in supabase/.",
+  "scripts": {
+    "db:start": "supabase start",
+    "db:stop": "supabase stop",
+    "db:reset": "supabase db reset",
+    "db:status": "supabase status",
+    "db:diff": "supabase db diff",
+    "db:types": "supabase gen types typescript --local > web/src/lib/supabase/database.types.ts"
+  },
+  "devDependencies": {
+    "supabase": "^2.72.4"
+  }
+}

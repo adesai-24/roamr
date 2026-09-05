@@ -1,0 +1,135 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Placeholders so `next build` can inline NEXT_PUBLIC_* values. CI never talks
+  # to a real project: unit tests use fakes and database tests use a local stack.
+  NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder-anon-key
+  SUPABASE_SERVICE_ROLE_KEY: ci-placeholder-service-role-key
+  NEXT_PUBLIC_SITE_URL: http://localhost:3000
+
+jobs:
+  web:
+    name: Lint, typecheck, test, build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+      - run: npm run format:check
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+
+  database:
+    name: Migrations, RLS guard, seed idempotency
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      # Proves migrations apply to an empty database from scratch. A migration
+      # that only works against a developer's already-migrated local database is
+      # the single most common way this kind of project breaks for the next person.
+      - name: Start local stack
+        run: supabase start -x studio,realtime,imgproxy,inbucket,vector
+
+      - name: Apply migrations from scratch
+        run: supabase db reset
+
+      # roamr's core promise is friends-only visibility. A table shipped without
+      # RLS is readable by anyone holding the anon key, and nothing else in the
+      # test suite would notice.
+      - name: Every public table has RLS enabled
+        run: |
+          missing=$(psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" \
+            -tAc "select coalesce(string_agg(table_name, ', '), '') from public.tables_missing_rls();")
+          if [ -n "$missing" ]; then
+            echo "::error::Tables missing row level security: $missing"
+            exit 1
+          fi
+          echo "All public tables have RLS enabled."
+
+      # Seeds define the challenge catalog. If re-seeding duplicates or mutates
+      # rows, a `db reset` during development silently diverges from production.
+      - name: Seeding twice changes nothing
+        run: |
+          before=$(psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" \
+            -tAc "select md5(string_agg(t::text, '|' order by t::text)) from (
+                    select table_name, (xpath('/row/c/text()',
+                      query_to_xml(format('select count(*) as c from public.%I', table_name),
+                      false, true, '')))[1]::text::int as n
+                    from information_schema.tables where table_schema = 'public'
+                  ) t;")
+          for f in supabase/seeds/*.sql; do
+            [ -e "$f" ] || continue
+            psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" -v ON_ERROR_STOP=1 -f "$f"
+          done
+          after=$(psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" \
+            -tAc "select md5(string_agg(t::text, '|' order by t::text)) from (
+                    select table_name, (xpath('/row/c/text()',
+                      query_to_xml(format('select count(*) as c from public.%I', table_name),
+                      false, true, '')))[1]::text::int as n
+                    from information_schema.tables where table_schema = 'public'
+                  ) t;")
+          if [ "$before" != "$after" ]; then
+            echo "::error::Re-running seeds changed row counts; seeds must be idempotent upserts."
+            exit 1
+          fi
+          echo "Seeds are idempotent."
+
+  docker:
+    name: Container image builds
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Build web image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./web
+          push: false
+          load: true
+          tags: roamr/web:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            NEXT_PUBLIC_SUPABASE_URL=${{ env.NEXT_PUBLIC_SUPABASE_URL }}
+            NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ env.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+            NEXT_PUBLIC_SITE_URL=${{ env.NEXT_PUBLIC_SITE_URL }}
+
+      # The image is the deployment artifact for the cluster path, so "it builds"
+      # is not enough -- it has to actually come up and answer its liveness probe.
+      - name: Container starts and reports healthy
+        run: |
+          docker run -d --name roamr-ci -p 3000:3000 \
+            -e NEXT_PUBLIC_SUPABASE_URL="$NEXT_PUBLIC_SUPABASE_URL" \
+            -e NEXT_PUBLIC_SUPABASE_ANON_KEY="$NEXT_PUBLIC_SUPABASE_ANON_KEY" \
+            -e SUPABASE_SERVICE_ROLE_KEY="$SUPABASE_SERVICE_ROLE_KEY" \
+            roamr/web:ci
+          for i in $(seq 1 30); do
+            if curl -fsS http://localhost:3000/healthz > /dev/null; then
+              echo "Container healthy after ${i}s"; docker rm -f roamr-ci; exit 0
+            fi
+            sleep 1
+          done
+          echo "::error::Container never became healthy"; docker logs roamr-ci; exit 1
