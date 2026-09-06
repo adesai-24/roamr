@@ -57,6 +57,19 @@ what unlocks deeper native features like Apple Photos library integration
   date range and a list of participants.
 - **Feed** — reverse-chronological activity from your friends. No ranking
   algorithm.
+- **Challenge** — a curated checklist of places worth going: all 63 US
+  National Parks, the New7Wonders, all 50 states, a US bucket list. Public
+  reference data, identical for everyone and seeded rather than user-created.
+  A User joins a Challenge, and joining is what puts it on their profile.
+- **ChallengeTarget** — one place inside a Challenge. How a visit gets
+  recognised differs by target, so each carries a match mode: a *radius* (a
+  point plus a per-target distance — Yellowstone needs a much wider circle
+  than Gateway Arch), an *admin1* name (the state or region a City resolved
+  to, for "all 50 states", which no circle can express), or an exact *city*.
+- **ChallengeCompletion** — a User ticking one ChallengeTarget off, either
+  by hand or by accepting a suggestion matched from a Moment's location. A
+  declined suggestion is remembered too, so the same photo is never offered
+  twice.
 
 Two ways to browse your own history fall out of this for free: by **city**
 ("everywhere I've been to Chicago") or by **trip** ("everything from that
@@ -73,6 +86,13 @@ These are meant to be enforced by the mechanics, not just stated:
   grows slowly and intentionally.
 - Co-tagging a Moment makes it a shared experience between people, not
   content one person broadcasts to an audience.
+- **Challenges are personal checklists, never an ordering of people.** No
+  leaderboard, no ranking, and no global "N people have completed this"
+  counter. This is a rule rather than a gap in the feature set: no table,
+  query or endpoint may return several users' challenge progress in a
+  comparable, orderable shape. Progress does become visible to your friends,
+  because that's the fun part — it is never ranked against them, and any
+  future change here has to hold that line.
 
 ## Scope
 
@@ -86,6 +106,8 @@ These are meant to be enforced by the mechanics, not just stated:
 - Optional free-text Trip grouping across cities
 - Co-tagging friends on a Moment
 - Friends-only reverse-chronological feed
+- Challenges: curated place checklists (national parks, all 50 states, a
+  bucket list) with per-user, unranked progress
 - Basic privacy: friends-only by default, opt-in public per Moment/account
 
 ### Explicitly out of scope (v1) — deferred, not rejected
