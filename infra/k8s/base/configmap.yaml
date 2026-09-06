@@ -1,0 +1,27 @@
+# Non-secret runtime configuration. Overlays replace the environment-specific
+# values; nothing sensitive belongs here.
+#
+# The anon key is public by design -- row level security, not secrecy, protects
+# data behind it, and it ships in the browser bundle already. The service role
+# key is the opposite and never appears in this directory: it comes from a
+# Secret created out of band (see infra/README.md).
+#
+# These NEXT_PUBLIC_* values are also baked into the client bundle at image
+# build time (see the ARG lines in web/Dockerfile). Setting them here only
+# affects what the *server* reads, so they must match what the image was built
+# with -- a mismatch points the browser and the server at different projects
+# with no error anywhere.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: roamr-web
+data:
+  NODE_ENV: "production"
+  # Matches ENV PORT/HOSTNAME in web/Dockerfile. Binding 0.0.0.0 rather than
+  # localhost is what makes the port reachable from kubelet's probes.
+  PORT: "3000"
+  HOSTNAME: "0.0.0.0"
+  NEXT_TELEMETRY_DISABLED: "1"
+  NEXT_PUBLIC_SUPABASE_URL: "https://your-project.supabase.co"
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: ""
+  NEXT_PUBLIC_SITE_URL: "https://roamr.example.com"
