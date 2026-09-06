@@ -18,6 +18,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
   { href: "/feed", label: "Feed" },
   { href: "/places", label: "Places" },
   { href: "/trips", label: "Trips" },
+  { href: "/friends", label: "Friends" },
   { href: "/profile", label: "Profile" },
 ];
 
