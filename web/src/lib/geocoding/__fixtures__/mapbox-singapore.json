@@ -1,0 +1,29 @@
+{
+  "_note": "City state: Mapbox returns a country context but no region.* entry, so admin1 is absent. This is the common case outside the US, not an edge case.",
+  "type": "FeatureCollection",
+  "query": ["singapore"],
+  "features": [
+    {
+      "id": "place.9903471361304260",
+      "type": "Feature",
+      "place_type": ["place"],
+      "relevance": 1,
+      "properties": { "mapbox_id": "dXJuOm1ieHBsYzpjNlZz", "wikidata": "Q334" },
+      "text": "Singapore",
+      "place_name": "Singapore, Singapore",
+      "bbox": [103.605575, 1.158957, 104.087473, 1.470856],
+      "center": [103.8198, 1.3521],
+      "geometry": { "type": "Point", "coordinates": [103.8198, 1.3521] },
+      "context": [
+        {
+          "id": "country.9968792518847660",
+          "mapbox_id": "dXJuOm1ieHBsYzpTRw",
+          "wikidata": "Q334",
+          "short_code": "sg",
+          "text": "Singapore"
+        }
+      ]
+    }
+  ],
+  "attribution": "NOTICE: (c) 2026 Mapbox and its suppliers. All rights reserved."
+}

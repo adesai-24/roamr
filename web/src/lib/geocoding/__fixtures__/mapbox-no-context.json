@@ -1,0 +1,19 @@
+{
+  "_note": "Remote settlement: Mapbox omits the context array entirely, so there is neither a region nor a country to read. Both admin1 and countryCode must come back null instead of throwing.",
+  "type": "FeatureCollection",
+  "query": ["grytviken"],
+  "features": [
+    {
+      "id": "place.7194042042614540",
+      "type": "Feature",
+      "place_type": ["place"],
+      "relevance": 1,
+      "properties": {},
+      "text": "Grytviken",
+      "place_name": "Grytviken",
+      "center": [-36.5089, -54.2814],
+      "geometry": { "type": "Point", "coordinates": [-36.5089, -54.2814] }
+    }
+  ],
+  "attribution": "NOTICE: (c) 2026 Mapbox and its suppliers. All rights reserved."
+}

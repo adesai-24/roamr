@@ -1,0 +1,35 @@
+{
+  "type": "FeatureCollection",
+  "query": ["new", "york"],
+  "features": [
+    {
+      "id": "place.2618306377408480",
+      "type": "Feature",
+      "place_type": ["place"],
+      "relevance": 1,
+      "properties": { "mapbox_id": "dXJuOm1ieHBsYzpEZTVJ", "wikidata": "Q60" },
+      "text": "New York",
+      "place_name": "New York, New York, United States",
+      "bbox": [-74.259639, 40.477399, -73.700292, 40.917577],
+      "center": [-74.006, 40.7128],
+      "geometry": { "type": "Point", "coordinates": [-74.006, 40.7128] },
+      "context": [
+        {
+          "id": "region.17349986251855570",
+          "mapbox_id": "dXJuOm1ieHBsYzpCS2tz",
+          "wikidata": "Q1384",
+          "short_code": "US-NY",
+          "text": "New York"
+        },
+        {
+          "id": "country.19678805456372290",
+          "mapbox_id": "dXJuOm1ieHBsYzpJdXc",
+          "wikidata": "Q30",
+          "short_code": "us",
+          "text": "United States"
+        }
+      ]
+    }
+  ],
+  "attribution": "NOTICE: (c) 2026 Mapbox and its suppliers. All rights reserved."
+}

@@ -1,0 +1,41 @@
+{
+  "type": "FeatureCollection",
+  "query": ["san", "francisco"],
+  "features": [
+    {
+      "id": "place.17838528890156210",
+      "type": "Feature",
+      "place_type": ["place"],
+      "relevance": 1,
+      "properties": { "mapbox_id": "dXJuOm1ieHBsYzpBYVRzOTk", "wikidata": "Q62" },
+      "text": "San Francisco",
+      "place_name": "San Francisco, California, United States",
+      "bbox": [-123.017088, 37.639829, -122.28178, 37.929823],
+      "center": [-122.4194, 37.7749],
+      "geometry": { "type": "Point", "coordinates": [-122.4194, 37.7749] },
+      "context": [
+        {
+          "id": "district.8814255280553580",
+          "mapbox_id": "dXJuOm1ieHBsYzpodFRz",
+          "wikidata": "Q62",
+          "text": "San Francisco County"
+        },
+        {
+          "id": "region.419052704040900",
+          "mapbox_id": "dXJuOm1ieHBsYzpCbVRz",
+          "wikidata": "Q99",
+          "short_code": "US-CA",
+          "text": "California"
+        },
+        {
+          "id": "country.19678805456372290",
+          "mapbox_id": "dXJuOm1ieHBsYzpJdXc",
+          "wikidata": "Q30",
+          "short_code": "us",
+          "text": "United States"
+        }
+      ]
+    }
+  ],
+  "attribution": "NOTICE: (c) 2026 Mapbox and its suppliers. All rights reserved."
+}

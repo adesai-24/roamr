@@ -1,0 +1,41 @@
+{
+  "type": "FeatureCollection",
+  "query": ["chicago"],
+  "features": [
+    {
+      "id": "place.9757815470331290",
+      "type": "Feature",
+      "place_type": ["place"],
+      "relevance": 1,
+      "properties": { "mapbox_id": "dXJuOm1ieHBsYzpqaVRuN2c", "wikidata": "Q1297" },
+      "text": "Chicago",
+      "place_name": "Chicago, Illinois, United States",
+      "bbox": [-87.940101, 41.643919, -87.523661, 42.023131],
+      "center": [-87.6244, 41.8756],
+      "geometry": { "type": "Point", "coordinates": [-87.6244, 41.8756] },
+      "context": [
+        {
+          "id": "district.16309086602136380",
+          "mapbox_id": "dXJuOm1ieHBsYzo5c1Bz",
+          "wikidata": "Q108418",
+          "text": "Cook County"
+        },
+        {
+          "id": "region.10854263468358810",
+          "mapbox_id": "dXJuOm1ieHBsYzpBYVRz",
+          "wikidata": "Q1204",
+          "short_code": "US-IL",
+          "text": "Illinois"
+        },
+        {
+          "id": "country.19678805456372290",
+          "mapbox_id": "dXJuOm1ieHBsYzpJdXc",
+          "wikidata": "Q30",
+          "short_code": "us",
+          "text": "United States"
+        }
+      ]
+    }
+  ],
+  "attribution": "NOTICE: (c) 2026 Mapbox and its suppliers. All rights reserved."
+}

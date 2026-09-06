@@ -1,0 +1,41 @@
+{
+  "type": "FeatureCollection",
+  "query": [-119.6, 37.74],
+  "features": [
+    {
+      "id": "place.6033522575673850",
+      "type": "Feature",
+      "place_type": ["place"],
+      "relevance": 1,
+      "properties": { "mapbox_id": "dXJuOm1ieHBsYzpXcVRz", "wikidata": "Q1913049" },
+      "text": "Mariposa",
+      "place_name": "Mariposa, California, United States",
+      "bbox": [-119.994888, 37.451766, -119.930374, 37.512749],
+      "center": [-119.9663, 37.4849],
+      "geometry": { "type": "Point", "coordinates": [-119.9663, 37.4849] },
+      "context": [
+        {
+          "id": "district.9021313452276220",
+          "mapbox_id": "dXJuOm1ieHBsYzpmZVRz",
+          "wikidata": "Q109662",
+          "text": "Mariposa County"
+        },
+        {
+          "id": "region.419052704040900",
+          "mapbox_id": "dXJuOm1ieHBsYzpCbVRz",
+          "wikidata": "Q99",
+          "short_code": "US-CA",
+          "text": "California"
+        },
+        {
+          "id": "country.19678805456372290",
+          "mapbox_id": "dXJuOm1ieHBsYzpJdXc",
+          "wikidata": "Q30",
+          "short_code": "us",
+          "text": "United States"
+        }
+      ]
+    }
+  ],
+  "attribution": "NOTICE: (c) 2026 Mapbox and its suppliers. All rights reserved."
+}
