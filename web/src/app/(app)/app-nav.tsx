@@ -11,8 +11,8 @@ export interface NavItem {
 
 /**
  * Feed and Places are the two halves of the README's core loop; Trips is the
- * optional grouping over them. Later PRs fill the destinations in -- the links
- * exist now so the shape of the app is visible from the first screen.
+ * optional grouping over them. Places is live; the rest land in later PRs --
+ * the links exist now so the shape of the app is visible from the first screen.
  */
 export const NAV_ITEMS: readonly NavItem[] = [
   { href: "/feed", label: "Feed" },
