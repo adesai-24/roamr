@@ -1,3 +1,20 @@
+node_modules/
+.DS_Store
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# supabase cli
+supabase/.temp/
+supabase/.branches/
+
+# infra state — never commit; contains resource ids and can contain secrets
+infra/**/.terraform/
+infra/**/*.tfstate
+infra/**/*.tfstate.*
+infra/**/.terraform.lock.hcl
+
 # Local git worktrees created by Claude Code (agent isolation, etc.) --
 # ephemeral tooling state, never project source.
 .claude/worktrees/

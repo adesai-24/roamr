@@ -1,0 +1,59 @@
+@import "tailwindcss";
+
+/*
+ * Design tokens. Every colour used anywhere in the app is defined here in the
+ * light palette first, then overridden for dark -- so a component never hard-
+ * codes a hex value and dark mode can never be half-implemented.
+ *
+ * The palette is warm rather than the usual cool grey: the app is about photos
+ * of places you went with people you like, and a warm ground flatters
+ * photography where a blue-grey one fights it.
+ */
+:root {
+  --background: #fdfcf9;
+  --surface: #ffffff;
+  --surface-sunken: #f4f2ec;
+  --foreground: #1c1b16;
+  --muted: #6f6b5f;
+  --border: #e4e0d6;
+  --accent: #3f7d4e;
+  --accent-foreground: #ffffff;
+  --danger: #a3392f;
+  --radius: 0.75rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #14140f;
+    --surface: #1e1d18;
+    --surface-sunken: #100f0b;
+    --foreground: #f2efe6;
+    --muted: #a09a8c;
+    --border: #322f27;
+    --accent: #6fbf83;
+    --accent-foreground: #0f1a12;
+    --danger: #e0796c;
+  }
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-sunken: var(--surface-sunken);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-danger: var(--danger);
+  --radius-card: var(--radius);
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+}
+
+body {
+  font-family: var(--font-sans);
+  /* Photo grids and the feed are the main surfaces; a stray horizontal
+     scrollbar on a phone is the most common way that goes wrong. */
+  overflow-x: hidden;
+}
