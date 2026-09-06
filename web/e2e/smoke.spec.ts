@@ -1,8 +1,9 @@
 import { expect, test } from "@playwright/test";
 
-test("home page renders", async ({ page }) => {
+test("home page redirects a signed-out visitor to login", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByRole("heading", { name: "roamr" })).toBeVisible();
+  await expect(page).toHaveURL(/\/login$/);
+  await expect(page.getByRole("heading", { name: "Log in" })).toBeVisible();
 });
 
 test("liveness probe responds without touching dependencies", async ({ request }) => {
