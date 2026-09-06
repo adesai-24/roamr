@@ -11,17 +11,26 @@ export async function GET() {
   const checks: Record<string, "ok" | "fail"> = {};
 
   let supabaseUrl: string | undefined;
+  let anonKey: string | undefined;
   try {
     const { serverEnv } = await import("@/lib/env");
-    supabaseUrl = serverEnv().NEXT_PUBLIC_SUPABASE_URL;
+    const env = serverEnv();
+    supabaseUrl = env.NEXT_PUBLIC_SUPABASE_URL;
+    anonKey = env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
     checks.config = "ok";
   } catch {
     checks.config = "fail";
   }
 
-  if (supabaseUrl) {
+  if (supabaseUrl && anonKey) {
     try {
+      // The apikey header is required: hosted Supabase answers 401 on an
+      // unauthenticated health check, so probing without it reports every
+      // healthy project as down -- which in a cluster means pods that never
+      // become ready. The local CLI stack is laxer, which is exactly why this
+      // only shows up against a real project.
       const res = await fetch(`${supabaseUrl}/auth/v1/health`, {
+        headers: { apikey: anonKey },
         signal: AbortSignal.timeout(3000),
         cache: "no-store",
       });
@@ -34,8 +43,6 @@ export async function GET() {
   const ready = Object.values(checks).every((v) => v === "ok");
   return NextResponse.json(
     { status: ready ? "ready" : "not_ready", checks },
-    {
-      status: ready ? 200 : 503,
-    },
+    { status: ready ? 200 : 503 },
   );
 }
