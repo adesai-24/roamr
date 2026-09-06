@@ -24,12 +24,11 @@ const searchQuerySchema = z
  * CHECK constraints on `cities` so a bad payload is rejected before it reaches
  * Postgres rather than by it.
  *
- * Known residual risk: a signed-in user could post a well-formed payload with
- * the right place id and wrong coordinates, and the upsert would move a shared
- * city row for everyone. Shape validation bounds the damage to a plausible
- * point, and the friends-only v1 audience is not an anonymous internet, but the
- * real fix is to re-fetch the place from the provider server-side and write
- * only provider-returned values. Deferred rather than dismissed.
+ * This is the first gate, not the only one. Validation cannot tell a truthful
+ * payload from a well-formed lie -- the right place id with a junk coordinate
+ * passes every check here. What stops that from mattering is resolveCity()
+ * writing insert-if-absent, so a payload can only ever establish a city nobody
+ * has added yet and can never move one that already exists.
  */
 const geocodeResultSchema = z.object({
   providerPlaceId: z.string().trim().min(1).max(200),
