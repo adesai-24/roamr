@@ -14,3 +14,7 @@ infra/**/.terraform/
 infra/**/*.tfstate
 infra/**/*.tfstate.*
 infra/**/.terraform.lock.hcl
+
+# Local git worktrees created by Claude Code (agent isolation, etc.) --
+# ephemeral tooling state, never project source.
+.claude/worktrees/
