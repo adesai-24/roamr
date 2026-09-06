@@ -74,25 +74,15 @@ jobs:
       - name: Seeding twice changes nothing
         run: |
           before=$(psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" \
-            -tAc "select md5(string_agg(t::text, '|' order by t::text)) from (
-                    select table_name, (xpath('/row/c/text()',
-                      query_to_xml(format('select count(*) as c from public.%I', table_name),
-                      false, true, '')))[1]::text::int as n
-                    from information_schema.tables where table_schema = 'public'
-                  ) t;")
+            -tAc "select public.public_tables_row_hash();")
           for f in supabase/seeds/*.sql; do
             [ -e "$f" ] || continue
             psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" -v ON_ERROR_STOP=1 -f "$f"
           done
           after=$(psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" \
-            -tAc "select md5(string_agg(t::text, '|' order by t::text)) from (
-                    select table_name, (xpath('/row/c/text()',
-                      query_to_xml(format('select count(*) as c from public.%I', table_name),
-                      false, true, '')))[1]::text::int as n
-                    from information_schema.tables where table_schema = 'public'
-                  ) t;")
+            -tAc "select public.public_tables_row_hash();")
           if [ "$before" != "$after" ]; then
-            echo "::error::Re-running seeds changed row counts; seeds must be idempotent upserts."
+            echo "::error::Re-running seeds changed row content; seeds must be idempotent upserts."
             exit 1
           fi
           echo "Seeds are idempotent."
