@@ -44,7 +44,7 @@ cross join (values
   ('glacier', 'Glacier National Park', 'Montana', 48.7596, -113.7870, 'radius', null, 50000, 'Montana', 'US', 22),
   ('glacier-bay', 'Glacier Bay National Park and Preserve', 'Alaska', 58.6658, -136.9002, 'radius', null, 80000, 'Alaska', 'US', 23),
   ('grand-canyon', 'Grand Canyon National Park', 'Arizona', 36.0544, -112.1401, 'radius', null, 70000, 'Arizona', 'US', 24),
-  ('grand-teton', 'Grand Teton National Park', 'Wyoming', 43.7904, -110.6818, 'radius', null, 30000, 'Wyoming', 'US', 25),
+  ('grand-teton', 'Grand Teton National Park', 'Wyoming', 43.7904, -110.6818, 'radius', null, 40000, 'Wyoming', 'US', 25),
   ('great-basin', 'Great Basin National Park', 'Nevada', 38.9833, -114.3000, 'radius', null, 20000, 'Nevada', 'US', 26),
   ('great-sand-dunes', 'Great Sand Dunes National Park and Preserve', 'Colorado', 37.7916, -105.5943, 'radius', null, 20000, 'Colorado', 'US', 27),
   ('great-smoky-mountains', 'Great Smoky Mountains National Park', 'Tennessee and North Carolina', 35.6118, -83.4895, 'radius', null, 40000, 'Tennessee', 'US', 28),
@@ -80,7 +80,7 @@ cross join (values
   ('white-sands', 'White Sands National Park', 'New Mexico', 32.7797, -106.1717, 'radius', null, 25000, 'New Mexico', 'US', 58),
   ('wind-cave', 'Wind Cave National Park', 'South Dakota', 43.5724, -103.4780, 'radius', null, 12000, 'South Dakota', 'US', 59),
   ('wrangell-st-elias', 'Wrangell-St. Elias National Park and Preserve', 'Alaska', 61.7104, -142.9857, 'radius', null, 150000, 'Alaska', 'US', 60),
-  ('yellowstone', 'Yellowstone National Park', 'Wyoming, Montana and Idaho', 44.4280, -110.5885, 'radius', null, 60000, 'Wyoming', 'US', 61),
+  ('yellowstone', 'Yellowstone National Park', 'Wyoming, Montana and Idaho', 44.5979, -110.5471, 'radius', null, 70000, 'Wyoming', 'US', 61),
   ('yosemite', 'Yosemite National Park', 'California', 37.8651, -119.5383, 'radius', null, 40000, 'California', 'US', 62),
   ('zion', 'Zion National Park', 'Utah', 37.2982, -113.0263, 'radius', null, 25000, 'Utah', 'US', 63)
 ) as v (slug, name, subtitle, lat, lng, match_mode, match_value, radius_m, admin1, country_code, sort_order)
