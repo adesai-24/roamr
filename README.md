@@ -138,6 +138,40 @@ These are meant to be enforced by the mechanics, not just stated:
   an existing library would require a native iOS app, which is a possible
   future step, not a current one (see Platform above).
 
+## Getting started on your own laptop
+
+**You'll need:** [Node.js](https://nodejs.org) 22+, [Docker Desktop](https://www.docker.com/products/docker-desktop/) (the local database runs in it), and Git.
+
+```bash
+git clone https://github.com/adesai-24/roamr.git
+cd roamr
+
+npm install              # repo root — Supabase CLI + db scripts
+cd web && npm install    # the app itself
+cd ..
+
+npm run db:start         # starts a local database (needs Docker running)
+npx supabase status      # prints the local URLs/keys you need next
+
+# copy the repo-root .env.example to web/.env.local and fill it in
+# with the values npx supabase status just printed
+
+npm run db:reset         # loads the database schema
+
+cd web
+npm run dev              # http://localhost:3000
+```
+
+See `CLAUDE.md`'s Commands section for tests, linting, and everything else.
+
+### Using Claude Code on this project
+
+This repo carries a `CLAUDE.md` file with its working conventions — security
+rules, coding style, commands, branch naming. Open this folder with
+[Claude Code](https://claude.com/claude-code) (run `claude` from inside the
+`roamr` directory) and it reads that file automatically, so it already knows
+the project's rules before you ask it to change anything.
+
 ## Contributing
 
 This doc is the source of truth for what v1 is and isn't. If a change
