@@ -195,8 +195,16 @@ export interface PostgrestLike {
  * the statement -- which is why `expectDenied` treats zero affected rows as a
  * denial too, and why every update test here also reads the row back to prove
  * it did not change.
+ *
+ * `23514` covers the third way a write gets refused: a trigger or constraint
+ * raising check_violation. Some rules cannot be expressed as a policy at all --
+ * "this column may not change" needs to compare the new row against the old
+ * one, and `with check` only ever sees the new one -- so those are enforced by
+ * a trigger instead (see 20260108000000_friendships_immutable_identity.sql).
+ * That is still the database refusing the statement, and the assertion should
+ * read it as such rather than as an unexpected error.
  */
-const RLS_DENIAL_CODES: ReadonlySet<string> = new Set(["42501", "PGRST301"]);
+const RLS_DENIAL_CODES: ReadonlySet<string> = new Set(["42501", "PGRST301", "23514"]);
 
 function rowCount(result: PostgrestLike): number {
   if (result.data === null || result.data === undefined) return 0;
