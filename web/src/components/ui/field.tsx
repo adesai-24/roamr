@@ -8,14 +8,7 @@ export function fieldErrorId(id: string): string {
   return `${id}-error`;
 }
 
-/**
- * The `aria-describedby` value for a control inside a Field.
- *
- * Callers wire this onto the control themselves rather than Field cloning its
- * child: `useId` would force Field to be a client component, and cloneElement
- * does not survive the server/client boundary. An explicit id is the version
- * that works from anywhere, and it is one prop.
- */
+/** The `aria-describedby` value for a control inside a Field. */
 export function fieldDescribedBy(
   id: string,
   { hint, error }: { hint?: unknown; error?: unknown },

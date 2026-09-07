@@ -20,8 +20,6 @@ export default async function PlacePage({ params }: { params: Promise<{ cityId: 
   const current = await getCurrentUser();
   if (!current) redirect(LOGIN_PATH);
 
-  // A city id that is not a uuid would reach Postgres as a cast error rather
-  // than an empty result, and a 500 is the wrong answer to a mistyped URL.
   if (!UUID.test(cityId)) notFound();
 
   const place = await getPlace(current.id, cityId);
@@ -44,9 +42,7 @@ export default async function PlacePage({ params }: { params: Promise<{ cityId: 
 
       {place.moments.length === 0 ? (
         <div className="border-border rounded-card flex flex-col gap-3 border border-dashed p-6">
-          <p className="text-muted text-sm">
-            Nothing here yet. This collection stays put — add a photo and it fills back up.
-          </p>
+          <p className="text-muted text-sm">Nothing here yet. Add a photo and it fills back up.</p>
           <Link href="/moments/new" className={buttonStyles({ size: "md" })}>
             Add a moment
           </Link>

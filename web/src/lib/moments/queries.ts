@@ -5,14 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { signCollectionCovers, signMomentPhotos } from "./photo-url";
 import type { MomentDetail, MomentRow, PlaceDetail, PlaceSummary, UserCityRow } from "./types";
 
-/**
- * Reads for the collection views.
- *
- * All of these run through the request-scoped client, so row level security is
- * doing the filtering. Where a query also names `user_id`, that is the second
- * of CLAUDE.md's two checks rather than the only one -- a policy that got
- * loosened by mistake would still not widen these results.
- */
+/** Reads for the collection views. */
 
 const MOMENT_COLUMNS =
   "id, userId:user_id, userCityId:user_city_id, photoPath:photo_path, width, height, caption, takenAt:taken_at, pinLat:pin_lat, pinLng:pin_lng, visibility, createdAt:created_at, updatedAt:updated_at";
@@ -20,12 +13,7 @@ const MOMENT_COLUMNS =
 const COLLECTION_COLUMNS =
   "id, userId:user_id, cityId:city_id, momentCount:moment_count, firstMomentAt:first_moment_at, lastMomentAt:last_moment_at, coverPhotoPath:cover_photo_path";
 
-/**
- * Embedded through the single-column `user_cities.city_id` foreign key. The
- * moments table deliberately is not embedded anywhere: it reaches `user_cities`
- * through a two-column key, and a relationship that has to be inferred is a
- * runtime failure rather than a compile-time one.
- */
+/** Embedded through the single-column `user_cities.city_id` foreign key. */
 const CITY_COLUMNS =
   "id, provider, provider_place_id, name, admin1, country_code, display_name, lat, lng, created_at";
 
@@ -33,15 +21,7 @@ interface CollectionWithCity extends UserCityRow {
   city: CityRow | null;
 }
 
-/**
- * A person's cities, most recently visited first.
- *
- * Collections whose count has fallen to zero are hidden rather than deleted.
- * The row is worth keeping -- it is the identity the next photo from that city
- * attaches to, and deleting collections is what would strand photo objects in
- * the bucket -- but a card reading "0 moments" with no cover is not a place
- * anybody has been.
- */
+/** A person's cities, most recently visited first. */
 export async function listPlaces(userId: string): Promise<PlaceSummary[]> {
   const supabase = await createClient();
 
@@ -72,16 +52,7 @@ export async function listPlaces(userId: string): Promise<PlaceSummary[]> {
     }));
 }
 
-/**
- * One city's collection, oldest photo first.
- *
- * Chronological rather than reverse-chronological, unlike everything else in
- * the app. The feed is a stream and reads newest-first; this page is the
- * README's "everywhere I've been to Chicago", which is a history -- and a
- * history told backwards is a strange thing to scroll.
- *
- * Null when the person has no moments there.
- */
+/** One city's collection, oldest photo first. */
 export async function getPlace(userId: string, cityId: string): Promise<PlaceDetail | null> {
   const supabase = await createClient();
 
@@ -104,8 +75,6 @@ export async function getPlace(userId: string, cityId: string): Promise<PlaceDet
     .select(MOMENT_COLUMNS)
     .eq("user_city_id", collection.id)
     .order("taken_at", { ascending: true })
-    // Two photos from the same minute need a stable tiebreak, or the grid
-    // reshuffles between renders.
     .order("created_at", { ascending: true });
 
   if (momentError) {
@@ -122,14 +91,7 @@ export async function getPlace(userId: string, cityId: string): Promise<PlaceDet
   };
 }
 
-/**
- * One moment, plus whether the caller owns it.
- *
- * The select is not filtered to the caller: a friend's moment is readable by
- * policy, and this is the page that renders it. Ownership only decides whether
- * the edit controls appear -- and the actions behind those controls check it
- * again, because a hidden button is a UI decision, not a permission.
- */
+/** One moment, plus whether the caller owns it. */
 export async function getMoment(userId: string, momentId: string): Promise<MomentDetail | null> {
   const supabase = await createClient();
 

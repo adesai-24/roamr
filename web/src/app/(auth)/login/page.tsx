@@ -6,12 +6,7 @@ export const metadata: Metadata = {
   title: "Sign in · roamr",
 };
 
-/**
- * Failure codes the callback can hand back. They are a fixed set on purpose:
- * the alternative is reflecting a provider error string out of a query
- * parameter and onto the page, and "it gets escaped anyway" is not a reason to
- * put attacker-controlled prose in front of someone mid sign-in.
- */
+/** Failure codes the callback can hand back. */
 const CALLBACK_ERRORS: Record<string, string> = {
   link_expired: "That sign-in link has expired. Here is a fresh start.",
   link_invalid: "That sign-in link is not valid any more. Request a new one.",

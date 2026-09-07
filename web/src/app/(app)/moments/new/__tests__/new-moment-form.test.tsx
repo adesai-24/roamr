@@ -10,12 +10,7 @@ import { preparePhoto } from "@/lib/moments/photo-pipeline";
 import { uploadPhoto } from "@/lib/moments/upload";
 import { NewMomentForm } from "../new-moment-form";
 
-/**
- * Factories rather than real modules: the actions reach `next/headers` and the
- * admin client, and the pipeline needs a canvas, neither of which exists in
- * jsdom. Mocking at the module edge is the same approach the city picker's
- * tests take.
- */
+/** Factories rather than real modules. */
 vi.mock("@/lib/moments/actions", () => ({
   createPhotoUploadTargetAction: vi.fn(),
   createMomentAction: vi.fn(),
@@ -135,8 +130,7 @@ describe("NewMomentForm", () => {
     await waitFor(() => {
       expect(uploadPhoto).toHaveBeenCalledTimes(1);
     });
-    // Identity: a structural matcher treats any two Blobs as equal, so this is
-    // the only way to say "the downscaled one, not the file they picked".
+    // Identity.
     const [target, blob] = vi.mocked(uploadPhoto).mock.calls[0] ?? [];
     expect(target).toEqual(UPLOAD_TARGET);
     expect(blob).toBe(ENCODED_BLOB);
@@ -147,8 +141,7 @@ describe("NewMomentForm", () => {
       height: 1536,
       caption: "Shibuya at closing time",
       takenAt: TAKEN_AT.toISOString(),
-      // The pin stays optional: nothing was set, so nothing is sent -- the
-      // photo's GPS prefills the city, it does not silently become a pin.
+      // The pin stays optional.
       pinLat: null,
       pinLng: null,
       city: TOKYO.provider_place_id,

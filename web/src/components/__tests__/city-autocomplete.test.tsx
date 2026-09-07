@@ -4,8 +4,7 @@ import { CityAutocomplete } from "@/components/city-autocomplete";
 import { fakeGeocodingProvider } from "@/lib/geocoding/fake";
 import type { GeocodeResult } from "@/lib/geocoding/types";
 
-// The component imports the server action for its default search. A factory
-// keeps `next/headers` and the admin client out of jsdom entirely.
+// The component imports the server action for its default search.
 vi.mock("@/lib/cities/actions", () => ({
   searchCitiesAction: vi.fn(),
   resolveCityAction: vi.fn(),
@@ -92,8 +91,6 @@ describe("CityAutocomplete debouncing", () => {
     await advance();
     expect(screen.getAllByRole("option").length).toBeGreaterThan(0);
 
-    // Dropping below the minimum length clears the list; the earlier response
-    // must not repopulate it.
     fireEvent.change(input, { target: { value: "c" } });
     await advance();
     expect(screen.queryAllByRole("option")).toHaveLength(0);

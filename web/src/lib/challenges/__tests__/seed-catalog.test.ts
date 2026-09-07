@@ -12,13 +12,7 @@ import {
   type SeedTarget,
 } from "../seed-catalog";
 
-/**
- * The seeds cannot be applied without Docker, so these assertions stand in for
- * the query you would otherwise run against the seeded database. They catch the
- * failures that would apply cleanly and still be wrong: a longitude that lost
- * its minus sign, a park dropped in a rebase, a slug that will not round-trip
- * through a URL.
- */
+/** The seeds cannot be applied without Docker. */
 
 const KEBAB_CASE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
@@ -140,8 +134,6 @@ describe("challenge catalog", () => {
   });
 
   it("derives target_count in the seeds instead of hard-coding it", () => {
-    // A literal count drifts the moment a target is added or removed, and
-    // nothing else would notice.
     expect(stripSqlComments(readSeedFile(SEED_FILES.challenges))).not.toContain("target_count");
     for (const { file } of TARGET_FILES) {
       const sql = readSeedFile(file);
@@ -213,8 +205,7 @@ describe.each(TARGET_FILES)("$challenge targets", ({ file, count }) => {
 
 describe("coordinate signs", () => {
   it("puts every US target in the western hemisphere", () => {
-    // The failure this exists for: a dropped minus sign moves Yosemite to
-    // China, the seed applies without complaint, and nothing ever matches.
+    // The failure this exists for.
     const usTargets = allTargets
       .flatMap(({ targets }) => targets)
       .filter((target) => target.countryCode === "US");

@@ -22,9 +22,7 @@ export default async function MomentPage({ params }: { params: Promise<{ momentI
 
   if (!UUID.test(momentId)) notFound();
 
-  // A moment nobody has shared with the caller comes back as null from the
-  // select policy, so "not found" and "not allowed" are the same page --
-  // which is the right answer to both.
+  // A moment nobody has shared with the caller comes back as null from the select policy.
   const detail = await getMoment(current.id, momentId);
   if (!detail) notFound();
 

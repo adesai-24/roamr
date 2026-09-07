@@ -3,11 +3,7 @@ import { fakeGeocodingProvider } from "../fake";
 import { getGeocodingProvider } from "../index";
 import type { GeocodingProvider } from "../types";
 
-/**
- * The fake is what every other test in the repo geocodes against, so its own
- * contract has to hold: same interface as Mapbox, same result shape, and the
- * same answer every run.
- */
+/** The fake is what every other test in the repo geocodes against. */
 describe("fakeGeocodingProvider", () => {
   it("satisfies the GeocodingProvider interface", () => {
     const provider: GeocodingProvider = fakeGeocodingProvider;
@@ -65,10 +61,7 @@ describe("fakeGeocodingProvider", () => {
     expect(results[0]?.name).toBe("Tokyo");
   });
 
-  /**
-   * A later PR matches challenge targets against exactly this lookup: standing
-   * in Yosemite Valley resolves to the nearest town rather than to nothing.
-   */
+  /** A later PR matches challenge targets against exactly this lookup. */
   it("reverse geocodes a point inside Yosemite to the nearest town", async () => {
     const result = await fakeGeocodingProvider.reverseCity(37.74, -119.6);
     expect(result).toMatchObject({

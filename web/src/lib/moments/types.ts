@@ -1,16 +1,6 @@
 import type { CityRow } from "@/lib/cities/types";
 
-/**
- * Row shapes for `public.user_cities` and `public.moments`, hand-declared for
- * the same reason `@/lib/cities/types` is: `supabase gen types` writes one file
- * for the whole schema, several feature branches are open at once, and that
- * file is a guaranteed conflict on every merge. The cost is keeping these in
- * step with 20260107000000_moments.sql by hand.
- *
- * `pin_geom` is intentionally absent -- it is generated from the lat/lng pair
- * and selecting a geography would hand TypeScript a hex string it has no use
- * for.
- */
+/** Row shapes for `public.user_cities` and `public.moments`. */
 
 export type MomentVisibility = "friends" | "public";
 
@@ -49,7 +39,7 @@ export interface PlaceSummary {
   momentCount: number;
   firstMomentAt: string | null;
   lastMomentAt: string | null;
-  /** A signed URL, already minted. Null when the cover photo could not be signed. */
+  /** A signed URL, already minted. */
   coverPhotoUrl: string | null;
 }
 
@@ -71,14 +61,7 @@ export interface MomentDetail {
   isOwner: boolean;
 }
 
-/**
- * What every moments server action returns.
- *
- * A discriminated union rather than a thrown error, matching the city actions:
- * a rejected action reaches the browser as an opaque "an error occurred", which
- * cannot tell a user that their upload expired from a user that their caption
- * was too long.
- */
+/** What every moments server action returns. */
 export type MomentActionResult<T> = { ok: true; data: T } | { ok: false; error: string };
 
 /** Where the browser puts the photo, and the token that lets it. */
@@ -93,7 +76,7 @@ export interface CreateMomentInput {
   width: number;
   height: number;
   caption: string | null;
-  /** ISO 8601. Null when the file carried no capture time; the server uses now(). */
+  /** ISO 8601. */
   takenAt: string | null;
   pinLat: number | null;
   pinLng: number | null;

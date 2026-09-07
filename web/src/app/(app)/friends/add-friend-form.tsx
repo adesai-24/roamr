@@ -17,17 +17,7 @@ export interface AddFriendFormProps {
   send?: SendFriendRequestFn;
 }
 
-/**
- * Add a friend by typing their exact username.
- *
- * There is no typeahead here and there must not be one. The README's design
- * principle is that the friend graph grows slowly and intentionally -- no bulk
- * import, no "people you may know" -- and a search box that surfaces strangers
- * as you type is exactly that feature wearing a smaller hat. The server action
- * behind this form resolves one exact username and returns one row or nothing,
- * so there is no endpoint to enumerate people through either. Please do not
- * "improve" this into a search.
- */
+/** Add a friend by typing their exact username. */
 export function AddFriendForm({ send = sendFriendRequest }: AddFriendFormProps) {
   const [username, setUsername] = useState("");
   const [result, setResult] = useState<FriendActionResult | null>(null);
@@ -43,8 +33,7 @@ export function AddFriendForm({ send = sendFriendRequest }: AddFriendFormProps) 
     startTransition(async () => {
       const outcome = await send(value);
       setResult(outcome);
-      // Clearing only on success leaves a rejected username in the box, which
-      // is what somebody needs in order to see the typo in it.
+      // Clearing only on success leaves a rejected username in the box.
       if (outcome.ok) setUsername("");
     });
   }

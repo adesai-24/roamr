@@ -5,12 +5,7 @@ import { searchCitiesAction } from "@/lib/cities/actions";
 import type { GeocodeResult } from "@/lib/geocoding/types";
 import { cn } from "@/lib/utils";
 
-/**
- * City picker.
- *
- * Styled with plain elements and design tokens for now; it moves onto the
- * shared UI primitives once those land.
- */
+/** City picker. */
 
 export type CitySearchFn = (query: string, signal: AbortSignal) => Promise<GeocodeResult[]>;
 
@@ -56,15 +51,12 @@ export function CityAutocomplete({
   const [isOpen, setIsOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
 
-  // Held in a ref so an inline arrow function passed as `search` does not
-  // retrigger the debounce effect on every render.
   const searchRef = useRef<CitySearchFn>(search ?? searchViaAction);
   useEffect(() => {
     searchRef.current = search ?? searchViaAction;
   }, [search]);
 
-  // Choosing a city fills the input with its name, which would otherwise look
-  // like fresh typing and immediately reopen the list under the user's finger.
+  // Choosing a city fills the input with its name.
   const skipNextSearchRef = useRef(false);
 
   const clearResults = useCallback(() => {
@@ -83,9 +75,7 @@ export function CityAutocomplete({
       return;
     }
 
-    // Clearing for a too-short query happens in the change handler instead:
-    // resetting state synchronously from an effect body just triggers a second
-    // render pass to undo the first one.
+    // Clearing for a too-short query happens in the change handler instead.
     if (trimmed.length < minQueryLength) return;
 
     const controller = new AbortController();
@@ -95,9 +85,7 @@ export function CityAutocomplete({
 
       searchRef.current(trimmed, controller.signal).then(
         (found) => {
-          // A response that arrives after the query moved on is worse than no
-          // response: it would repopulate the list with matches for text the
-          // user has already replaced.
+          // A response that arrives after the query moved on is worse than no response.
           if (controller.signal.aborted) return;
           setResults(found);
           setActiveIndex(found.length > 0 ? 0 : -1);
@@ -114,8 +102,7 @@ export function CityAutocomplete({
       );
     }, debounceMs);
 
-    // Runs on every keystroke: drops the pending debounce and marks any request
-    // already in flight as stale.
+    // Runs on every keystroke.
     return () => {
       clearTimeout(timer);
       controller.abort();
@@ -203,16 +190,13 @@ export function CityAutocomplete({
         onChange={(event) => {
           const value = event.target.value;
           setQuery(value);
-          // Deleting back down to a stub of a query should close the list right
-          // away rather than leave stale matches under the cursor.
           if (value.trim().length < minQueryLength) clearResults();
         }}
         onKeyDown={handleKeyDown}
         onFocus={() => {
           if (results.length > 0) setIsOpen(true);
         }}
-        // 16px keeps iOS from zooming the viewport on focus, and the tall target
-        // is for thumbs -- this is used on a phone.
+        // 16px keeps iOS from zooming the viewport on focus.
         className={cn(
           "border-border bg-surface text-foreground placeholder:text-muted",
           "focus:border-accent focus:ring-accent/40 rounded-card min-h-12 w-full border",

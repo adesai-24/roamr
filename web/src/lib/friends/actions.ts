@@ -7,24 +7,12 @@ import { normalizeUsername, validateUsername } from "@/lib/username";
 import { orderPair } from "./pair";
 import type { FriendActionResult, FriendshipRow } from "./types";
 
-/**
- * Mutations on the friend graph.
- *
- * Every one of these authorizes twice: the action checks the session and
- * constrains the statement to a pair the caller is part of, and the policies on
- * `public.friendships` refuse anything else. Neither layer is allowed to be the
- * only one that says no.
- *
- * They all return a result object rather than throwing. "That username does not
- * exist" and "you already asked them" are things people do every day, not
- * server faults, and a thrown error would reach the browser as an opaque
- * "an error occurred".
- */
+/** Mutations on the friend graph. */
 
 /** The screen these actions render on; revalidated after every successful write. */
 const FRIENDS_PATH = "/friends";
 
-/** Postgres unique violation: the pair already has a row. A normal race, not a fault. */
+/** Postgres unique violation: the pair already has a row. */
 const UNIQUE_VIOLATION = "23505";
 
 const usernameSchema = z
@@ -44,13 +32,7 @@ const usernameSchema = z
 
 const userIdSchema = z.uuid("That is not somebody roamr knows about.");
 
-/**
- * Send a friend request to an exact username.
- *
- * Resolving the username here rather than in the UI is what keeps the "exact
- * username only" rule enforceable: there is no endpoint that returns a list of
- * people, so there is nothing for a caller to enumerate.
- */
+/** Send a friend request to an exact username. */
 export async function sendFriendRequest(rawUsername: string): Promise<FriendActionResult> {
   const parsed = usernameSchema.safeParse(rawUsername);
   if (!parsed.success) {
@@ -75,15 +57,11 @@ export async function sendFriendRequest(rawUsername: string): Promise<FriendActi
     return { ok: false, error: "Could not look that up right now. Try again in a moment." };
   }
 
-  // Deliberately the same wording whether the username is free or belongs to
-  // somebody who simply is not you: a "that account exists" signal is the
-  // beginning of the people-directory this product does not have.
   if (!target) return { ok: false, error: `No one here goes by @${username}.` };
 
   const targetId = (target as { id: string }).id;
 
-  // Caught before orderPair, which treats one id twice as a caller bug, and
-  // long before the `user_a < user_b` constraint would report it as a 23514.
+  // Caught before orderPair.
   if (targetId === user.id) {
     return { ok: false, error: "That is your own username." };
   }
@@ -104,9 +82,7 @@ export async function sendFriendRequest(rawUsername: string): Promise<FriendActi
 
   if (error) {
     if (error.code === UNIQUE_VIOLATION) {
-      // Both people pressed the button at once, or the check above raced a
-      // request that landed in between. The row exists and says who asked whom,
-      // so re-read it and answer with the same sentence the check would have.
+      // Both people pressed the button at once.
       const raced = await readFriendship(supabase, userA, userB);
       return {
         ok: false,
@@ -133,15 +109,11 @@ export async function acceptFriendRequest(otherUserId: string): Promise<FriendAc
     .from("friendships")
     .update({
       status: "accepted",
-      // The database's own now() would be better, but PostgREST cannot express
-      // it without an RPC. The constraint only requires that an accepted row
-      // has a timestamp, and this one is off by a network round trip.
       responded_at: new Date().toISOString(),
     })
     .eq("user_a", userA)
     .eq("user_b", userB)
-    // Both filters restate the update policy in the statement itself, so a
-    // dropped policy could not turn this into "accept anything".
+    // Both filters restate the update policy in the statement itself.
     .eq("status", "pending")
     .neq("requested_by", selfId)
     .select("user_a");
@@ -152,8 +124,7 @@ export async function acceptFriendRequest(otherUserId: string): Promise<FriendAc
   }
 
   if ((data ?? []).length === 0) {
-    // Either it was withdrawn, or it is the caller's own request. Both mean the
-    // screen is showing something stale, so send them back to a fresh one.
+    // Either it was withdrawn, or it is the caller's own request.
     revalidatePath(FRIENDS_PATH);
     return { ok: false, error: "That request is not waiting any more." };
   }
@@ -162,13 +133,7 @@ export async function acceptFriendRequest(otherUserId: string): Promise<FriendAc
   return { ok: true, message: "You are friends now." };
 }
 
-/**
- * Remove a friendship row: declining, cancelling and unfriending, all three.
- *
- * They are one action because the policy models them as one permission -- a
- * participant deleting a row they are in -- and splitting them in TypeScript
- * would invent a distinction the database does not make.
- */
+/** Remove a friendship row: declining, cancelling and unfriending, all three. */
 export async function removeFriendship(otherUserId: string): Promise<FriendActionResult> {
   const target = await requirePair(otherUserId);
   if ("error" in target) return { ok: false, error: target.error };
@@ -185,9 +150,7 @@ export async function removeFriendship(otherUserId: string): Promise<FriendActio
     return { ok: false, error: "Could not do that right now. Try again in a moment." };
   }
 
-  // No "nothing was deleted" branch on purpose: a row that is already gone is
-  // the state the caller asked for. Reporting it as a failure would turn a
-  // double tap into an error message.
+  // No "nothing was deleted" branch on purpose.
   revalidatePath(FRIENDS_PATH);
   return { ok: true, message: "Done." };
 }
@@ -241,5 +204,5 @@ async function readFriendship(
 function describeExisting(row: FriendshipRow, selfId: string, username: string): string {
   if (row.status === "accepted") return `You and @${username} are already friends.`;
   if (row.requested_by === selfId) return `You already asked @${username}. Give them a moment.`;
-  return `@${username} already asked you — their request is waiting below.`;
+  return `@${username} already asked you. Their request is waiting below.`;
 }

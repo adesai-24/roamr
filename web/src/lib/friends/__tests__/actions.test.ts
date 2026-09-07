@@ -5,8 +5,7 @@ import { acceptFriendRequest, removeFriendship, sendFriendRequest } from "../act
 import type { FriendshipRow } from "../types";
 import { createFakeDatabase, type FakeDatabase } from "./fake-supabase";
 
-// Factories, so the real modules -- and `next/headers`, and the env schema --
-// are never evaluated in jsdom.
+// Factories.
 vi.mock("@/lib/supabase/server", () => ({ createClient: vi.fn() }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
@@ -71,9 +70,7 @@ describe("sendFriendRequest", () => {
   });
 
   it("orders the pair when the sender is the larger id", async () => {
-    // Written as a check on the stored row rather than on orderPair: the whole
-    // point of this action is that the constraint never sees an unordered pair,
-    // and the fake raises 23514 exactly like Postgres would if it did.
+    // Written as a check on the stored row rather than on orderPair.
     const db = setup(ZED);
 
     const result = await sendFriendRequest("alice");
@@ -165,14 +162,13 @@ describe("sendFriendRequest", () => {
 
     expect(await sendFriendRequest("bob")).toEqual({
       ok: false,
-      error: "@bob already asked you — their request is waiting below.",
+      error: "@bob already asked you. Their request is waiting below.",
     });
   });
 
   it("treats a simultaneous request as already-requested, not as an error", async () => {
     const db = setup(ALICE);
-    // The row appears in the window between the existence check and the insert,
-    // which is exactly what happens when both people press the button at once.
+    // The row appears in the window between the existence check and the insert.
     db.beforeInsert = () => {
       db.friendships.push(pending(ALICE, BOB, BOB));
       db.beforeInsert = undefined;
@@ -182,7 +178,7 @@ describe("sendFriendRequest", () => {
 
     expect(result).toEqual({
       ok: false,
-      error: "@bob already asked you — their request is waiting below.",
+      error: "@bob already asked you. Their request is waiting below.",
     });
     // The row that won the race is the one that survives, unchanged.
     expect(db.friendships).toEqual([pending(ALICE, BOB, BOB)]);
@@ -279,8 +275,7 @@ describe("removeFriendship", () => {
   });
 
   it("succeeds when the row is already gone", async () => {
-    // A double tap, or the other person unfriending first. The end state the
-    // caller asked for holds either way, so reporting a failure would be a lie.
+    // A double tap, or the other person unfriending first.
     setup(ALICE);
     expect(await removeFriendship(BOB)).toMatchObject({ ok: true });
   });

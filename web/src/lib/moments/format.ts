@@ -1,6 +1,6 @@
 import { format, isSameDay, isSameYear } from "date-fns";
 
-/** Dates as they appear on the collection pages. Kept here so they read alike everywhere. */
+/** Dates as they appear on the collection pages. */
 
 function parse(iso: string | null): Date | null {
   if (!iso) return null;
@@ -13,13 +13,7 @@ export function formatMomentDate(iso: string | null): string | null {
   return date ? format(date, "d MMM yyyy") : null;
 }
 
-/**
- * How long a collection spans.
- *
- * A single day, or several photos from one day, reads as a date rather than as
- * a range from a day to itself. Two dates in the same year drop the first
- * year, because repeating it says nothing.
- */
+/** How long a collection spans. */
 export function formatCollectionSpan(
   firstIso: string | null,
   lastIso: string | null,

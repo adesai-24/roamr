@@ -55,8 +55,7 @@ describe("getFriendsOverview", () => {
       }),
       // Sent to me and still waiting: an incoming request.
       row({ user_a: ME, user_b: CARL, requested_by: CARL }),
-      // Sent by me and still waiting: an outgoing one, stored the other way
-      // round because my id sorts first.
+      // Sent by me and still waiting.
       row({ user_a: ME, user_b: ZED, requested_by: ME }),
     );
 

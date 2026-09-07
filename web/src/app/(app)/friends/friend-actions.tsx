@@ -7,11 +7,7 @@ import type { FriendActionResult } from "@/lib/friends/types";
 
 export type FriendActionFn = (otherUserId: string) => Promise<FriendActionResult>;
 
-/**
- * Which of the three lists this row is in. The variant decides which buttons
- * appear, but declining, cancelling and unfriending all call the same action --
- * they are one permission in the policy, so they are one call here.
- */
+/** Which of the three lists this row is in. */
 export type FriendRowVariant = "incoming" | "outgoing" | "friend";
 
 export interface FriendActionsProps {
@@ -40,17 +36,13 @@ export function FriendActions({
     setError(null);
     startTransition(async () => {
       const result = await action(userId);
-      // Nothing to do on success: the action revalidates /friends, so this row
-      // either moves to another list or disappears with the next render.
+      // Nothing to do on success.
       if (!result.ok) setError(result.error);
       setConfirming(false);
     });
   }
 
-  // Unfriending is the one destructive thing on this screen -- the row is gone
-  // for both people and nothing records that it existed -- so it asks first.
-  // Declining and cancelling deliberately do not: a request is not a
-  // relationship, and a confirm step on every tap trains people to ignore it.
+  // Unfriending is the one destructive thing on this screen.
   if (variant === "friend" && confirming) {
     return (
       <Actions error={error}>

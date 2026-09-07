@@ -5,12 +5,7 @@ import type { MomentWithPhoto } from "@/lib/moments/types";
 import { createClient } from "@/lib/supabase/server";
 import type { AssignableMoment, TripCityGroup, TripDetail, TripSummary } from "./types";
 
-/**
- * Reads go through the request-scoped client, so the trips select policy is
- * what decides what comes back. Nothing here filters by owner in TypeScript:
- * the policy already does it, and a redundant filter would quietly become the
- * only protection the day someone edits the policy.
- */
+/** Reads go through the request-scoped client. */
 
 const TRIP_COLUMNS = "id, name, startsOn:starts_on, endsOn:ends_on, createdAt:created_at";
 
@@ -33,8 +28,7 @@ interface MomentJoinRow {
   user_cities: { city_id: string; cities: { id: string; display_name: string } | null } | null;
 }
 
-// Selects every column MomentWithPhoto declares, so the rows can be handed to
-// the same components the places views use without a mapping layer in between.
+// Selects every column MomentWithPhoto declares.
 const MOMENT_JOIN_COLUMNS =
   "id, userId:user_id, tripId:trip_id, userCityId:user_city_id, photoPath:photo_path, " +
   "width, height, caption, takenAt:taken_at, pinLat:pin_lat, pinLng:pin_lng, visibility, " +
@@ -46,14 +40,7 @@ function cityOf(row: MomentJoinRow): { id: string; name: string } {
   return { id: city?.id ?? "unknown", name: city?.display_name ?? "Unknown place" };
 }
 
-/**
- * The trips index.
- *
- * Two round trips rather than one: the trips, then every moment belonging to
- * them. Aggregating city names and a cover per trip in SQL would need a view or
- * an RPC, and at the scale of one person's trips the join is not the cost --
- * the photo signing below is.
- */
+/** The trips index. */
 export async function listTrips(): Promise<TripSummary[]> {
   const supabase = await createClient();
 
@@ -77,8 +64,7 @@ export async function listTrips(): Promise<TripSummary[]> {
 
   const moments = (momentRows ?? []) as unknown as MomentJoinRow[];
 
-  // One photo per trip is signed, not all of them: signing is a network call
-  // per object, and the index only ever shows a cover.
+  // One photo per trip is signed.
   const coverByTrip = new Map<string, MomentJoinRow>();
   const citiesByTrip = new Map<string, string[]>();
   const countByTrip = new Map<string, number>();
@@ -104,13 +90,7 @@ export async function listTrips(): Promise<TripSummary[]> {
   }));
 }
 
-/**
- * One trip, its moments grouped by city.
- *
- * Returns null rather than throwing when the trip is not visible, so a page can
- * answer 404 without distinguishing "does not exist" from "not yours" -- which
- * would otherwise let someone probe for trip ids.
- */
+/** One trip, its moments grouped by city. */
 export async function getTrip(tripId: string): Promise<TripDetail | null> {
   const supabase = await createClient();
 
@@ -131,8 +111,7 @@ export async function getTrip(tripId: string): Promise<TripDetail | null> {
   const moments = (momentRows ?? []) as unknown as MomentJoinRow[];
   const signed = await signMomentPhotos(moments.map((m) => m.id));
 
-  // Insertion-ordered: the moments arrive by time, so cities appear in the
-  // order the trip actually visited them.
+  // Insertion-ordered.
   const groups = new Map<string, TripCityGroup>();
   for (const row of moments) {
     const city = cityOf(row);
@@ -149,13 +128,7 @@ export async function getTrip(tripId: string): Promise<TripDetail | null> {
   };
 }
 
-/**
- * The moments a person can put into a trip: their own, most recent first.
- *
- * Capped rather than paginated. Assigning happens right after a trip is made,
- * when the moments in question are recent by definition, and an unbounded list
- * would sign a signed URL per photo for an entire history.
- */
+/** The moments a person can put into a trip: their own, most recent first. */
 export async function listAssignableMoments(
   userId: string,
   limit = 60,

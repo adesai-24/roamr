@@ -20,8 +20,7 @@ export default async function TripPage({ params }: { params: Promise<{ tripId: s
   if (!current) redirect(LOGIN_PATH);
 
   const detail = await getTrip(tripId);
-  // getTrip returns null for both "no such trip" and "not visible to you", so
-  // this cannot be used to probe which trip ids exist.
+  // getTrip returns null for both "no such trip" and "not visible to you".
   if (!detail) notFound();
 
   const { trip, groups, momentCount } = detail;

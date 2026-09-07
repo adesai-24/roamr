@@ -39,16 +39,14 @@ export function MomentEditor({ momentId, caption, pin, city }: MomentEditorProps
   const [draftCity, setDraftCity] = useState<SelectedCity>({
     label: city.displayName,
     center: { lat: city.lat, lng: city.lng },
-    // The place id, not the whole record: this city is already resolved, so
-    // there is nothing for the server to write.
+    // The place id.
     value: city.providerPlaceId,
   });
 
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
-  // Two-step rather than window.confirm: a native dialog is untestable, and
-  // this puts the warning in the page where the thing being deleted is.
+  // Two-step rather than window.confirm.
   const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   const handleSave = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -71,8 +69,7 @@ export function MomentEditor({ momentId, caption, pin, city }: MomentEditorProps
       return;
     }
     setSaved(true);
-    // The page above is a server component, so the new values only appear once
-    // its data is fetched again.
+    // The page above is a server component.
     router.refresh();
   };
 

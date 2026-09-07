@@ -1,15 +1,4 @@
 -- All 63 US National Parks.
---
--- match_mode is 'radius' throughout: a park is a point plus a distance. The
--- radius is sized per park, roughly to cover the park's own footprint without
--- swallowing the next town over. Wrangell-St. Elias is 150 km of slack;
--- Gateway Arch, at 91 acres, gets 1.5 km. A single shared constant would be
--- wrong at both ends.
---
--- Longitudes are all negative -- every one of these is in the western
--- hemisphere, including American Samoa at -170. A dropped minus sign puts a
--- park on the wrong side of the planet and silently stops matching, so the
--- vitest suite in web/src/lib/challenges/ asserts the sign on every row.
 
 insert into public.challenge_targets as t (
   challenge_id, slug, name, subtitle, lat, lng,
@@ -103,8 +92,7 @@ where (t.name, t.subtitle, t.lat, t.lng, t.match_mode, t.match_value,
        excluded.match_value, excluded.radius_m, excluded.admin1, excluded.country_code,
        excluded.sort_order);
 
--- Derive target_count instead of hard-coding 63, so adding or removing a park
--- above is the only edit needed.
+-- Derive target_count instead of hard-coding 63.
 update public.challenges c
 set target_count = counted.n, updated_at = now()
 from (

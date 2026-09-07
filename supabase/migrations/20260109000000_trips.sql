@@ -1,13 +1,4 @@
 -- Trips: an optional, user-named grouping of moments.
---
--- Deliberately not a place. The README is explicit that a trip is free text --
--- "July 4th trip", "Pinnacles trip" -- and can span moments in several cities,
--- so it carries no city_id and is never geocoded. Canonical trip destinations
--- are listed as out of scope for v1.
---
--- This gives the second way of browsing your own history that the README says
--- falls out for free: by city, or by trip, without either view cancelling the
--- other out. A moment keeps its city collection whether or not it is in a trip.
 
 create table public.trips (
   id uuid primary key default gen_random_uuid(),
@@ -16,8 +7,7 @@ create table public.trips (
 
   name text not null,
 
-  -- Both optional. Plenty of trips get named long after the fact, when nobody
-  -- remembers the dates, and demanding them would just produce invented ones.
+  -- Both optional.
   starts_on date,
   ends_on date,
 
@@ -29,10 +19,7 @@ create table public.trips (
     starts_on is null or ends_on is null or starts_on <= ends_on
   ),
 
-  -- Not redundant with the primary key. It is what lets `moments` reference
-  -- (trip_id, user_id) as a pair, which is how "your moment in someone else's
-  -- trip" becomes unrepresentable rather than merely unlikely. The same shape
-  -- the moments table already uses for user_cities.
+  -- Not redundant with the primary key.
   constraint trips_id_owner_unique unique (id, owner_id)
 );
 
@@ -59,30 +46,17 @@ create trigger trips_set_updated_at
   for each row
   execute function public.trips_set_updated_at();
 
--- ---------------------------------------------------------------------------
 -- The link from a moment to its trip.
---
--- Nullable, and `on delete set null`: deleting a trip must ungroup its moments,
--- never destroy them. The photos are the thing people care about; the grouping
--- is a label over the top of them.
--- ---------------------------------------------------------------------------
 alter table public.moments
   add column trip_id uuid references public.trips (id) on delete set null;
 
 comment on column public.moments.trip_id is
   'Optional grouping. Null is the normal case; a moment always has a city, only sometimes a trip.';
 
--- Partial: most moments are not in a trip, and this index only ever serves
--- queries that name one.
+-- Partial.
 create index moments_trip_idx on public.moments (trip_id) where trip_id is not null;
 
--- A single-column foreign key, unlike the composite one used for user_cities,
--- because `on delete set null` nulls *every* column in the key -- and user_id
--- is not nullable, so a composite key here could not use it. Same-owner is
--- therefore enforced by the trigger below instead.
---
--- The trigger is in some ways the stronger of the two: a policy is bypassed by
--- the service role, and this is not.
+-- A single-column foreign key.
 create or replace function public.moments_reject_foreign_trip()
 returns trigger
 language plpgsql
@@ -109,9 +83,7 @@ create trigger moments_trip_must_be_owned
 
 alter table public.trips enable row level security;
 
--- Visible to the owner and to the owner's friends, which is the same audience
--- as the moments inside it. A trip that were visible more widely than its
--- contents would leak the shape of somebody's travel through its name alone.
+-- Visible to the owner and to the owner's friends.
 create policy "trips are readable by their owner and their friends"
   on public.trips
   for select
@@ -142,12 +114,9 @@ create policy "people can delete their own trips"
 
 grant select, insert, delete on table public.trips to authenticated;
 
--- Revoke before granting: Supabase's bootstrap already grants all on every
--- table in public to authenticated, so a column-scoped grant on its own adds
--- nothing. Learned from 20260108000000_friendships_immutable_identity.sql,
--- where exactly this mistake let a column be rewritten.
+-- Revoke before granting.
 revoke update on table public.trips from authenticated;
 grant update (name, starts_on, ends_on, updated_at) on table public.trips to authenticated;
 
--- Anonymous visitors have no business here in v1. There is no public trip view.
+-- Anonymous visitors have no business here in v1.
 revoke all on table public.trips from anon;

@@ -9,11 +9,7 @@ import {
 } from "../__fixtures__/exif-jpeg";
 import { readPhotoMetadata, toDecimalDegrees } from "../exif";
 
-/**
- * Coordinates good to five decimal places -- about a metre. Tighter than that
- * would be asserting on floating point noise, looser would let a sign error in
- * the seconds component through.
- */
+/** Coordinates good to five decimal places, about a metre. */
 const PRECISION = 5;
 
 describe("toDecimalDegrees", () => {
@@ -47,8 +43,7 @@ describe("toDecimalDegrees", () => {
   it("rejects a latitude past the pole and a longitude past the date line", () => {
     expect(toDecimalDegrees([91, 0, 0], "N")).toBeNull();
     expect(toDecimalDegrees([181, 0, 0], "E")).toBeNull();
-    // The same magnitude is fine as a longitude, which is why the bound is
-    // taken from the hemisphere letter rather than fixed at 90.
+    // The same magnitude is fine as a longitude.
     expect(toDecimalDegrees([91, 0, 0], "E")).toBeCloseTo(91, PRECISION);
   });
 
@@ -74,11 +69,7 @@ describe("readPhotoMetadata", () => {
     expect(metadata.takenAt).toBeInstanceOf(Date);
   });
 
-  /**
-   * The case that makes the sign handling worth testing at all: Ushuaia is
-   * south *and* west, so dropping either sign moves the photo to a different
-   * continent while leaving a coordinate that still looks perfectly valid.
-   */
+  /** The case that makes the sign handling worth testing at all. */
   it("reads a southern, western coordinate with both signs intact", async () => {
     const metadata = await readPhotoMetadata(USHUAIA_JPEG);
 
@@ -103,8 +94,7 @@ describe("readPhotoMetadata", () => {
   });
 
   it("treats a half-written GPS block as no location", async () => {
-    // A latitude with no longitude cannot place anything, and half a
-    // coordinate stored as a pin would be worse than none.
+    // A latitude with no longitude cannot place anything.
     const halfWritten = buildExifJpeg({
       latitude: { dms: dms(35, 41, 22.2), ref: "N" },
       dateTimeOriginal: "2024:07:04 18:30:15",
@@ -117,8 +107,7 @@ describe("readPhotoMetadata", () => {
   });
 
   it("treats a (0, 0) fix as no location", async () => {
-    // Null Island: a real point in the Gulf of Guinea, and never where the
-    // photo was taken. Devices write it when a fix fails.
+    // Null Island: a real point in the Gulf of Guinea, and never where the photo was taken.
     const nullIsland = buildExifJpeg({
       latitude: { dms: dms(0, 0, 0), ref: "N" },
       longitude: { dms: dms(0, 0, 0), ref: "E" },

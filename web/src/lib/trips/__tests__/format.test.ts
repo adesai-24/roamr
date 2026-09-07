@@ -23,7 +23,7 @@ describe("formatTripDates", () => {
   it("states the year once for a range inside one year", () => {
     const result = formatTripDates("2026-07-04", "2026-07-08") ?? "";
     expect(result).toContain("–");
-    // "Jul 4 – Jul 8, 2026" -- not "Jul 4, 2026 – Jul 8, 2026".
+    // "Jul 4 – Jul 8, 2026", not "Jul 4, 2026 – Jul 8, 2026".
     expect(result.match(/2026/g)).toHaveLength(1);
   });
 
@@ -33,12 +33,7 @@ describe("formatTripDates", () => {
     expect(result).toContain("2027");
   });
 
-  /**
-   * The bug this guards against is invisible in most timezones and wrong in
-   * half of them. `date` columns arrive as "2026-07-04"; `new Date()` parses
-   * that as UTC midnight, which is July *3rd* anywhere west of Greenwich -- so
-   * a trip would display as starting the day before it did.
-   */
+  /** The bug this guards against is invisible in most timezones and wrong in half of them. */
   it("does not shift the day backwards in western timezones", () => {
     const result = formatTripDates("2026-07-04", "2026-07-04") ?? "";
     expect(result).toContain("4");

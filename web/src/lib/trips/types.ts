@@ -1,12 +1,6 @@
 import type { MomentWithPhoto } from "@/lib/moments/types";
 
-/**
- * A `public.trips` row as this feature reads it.
- *
- * Hand-declared rather than generated, matching the rest of the codebase:
- * `supabase gen types` writes one file for the whole schema, which several open
- * branches would all conflict in.
- */
+/** A `public.trips` row as this feature reads it. */
 export interface TripRow {
   id: string;
   name: string;
@@ -24,10 +18,7 @@ export interface TripSummary extends TripRow {
   coverPhotoUrl: string | null;
 }
 
-/**
- * The detail view groups by city, then by time within each city -- the README's
- * "everything from that one weekend", where the weekend spanned two places.
- */
+/** The detail view groups by city. */
 export interface TripCityGroup {
   cityId: string;
   cityName: string;
@@ -47,7 +38,7 @@ export interface AssignableMoment {
   takenAt: string;
   cityName: string;
   photoUrl: string | null;
-  /** The trip it is already in, if any -- so the picker can show what moves. */
+  /** The trip it is already in, if any, so the picker can show what moves. */
   tripId: string | null;
 }
 

@@ -1,18 +1,6 @@
-/**
- * Turning a trip's optional date range into something a person reads.
- *
- * Both ends are optional and either can be missing on its own, so this is four
- * cases rather than one, and getting it wrong produces the sort of output --
- * "Invalid Date – undefined" -- that only ever shows up in front of a user.
- */
+/** Turning a trip's optional date range into something a person reads. */
 
-/**
- * Dates are stored as `date`, not `timestamptz`, and arrive as "2026-07-04".
- * Passing that to `new Date()` parses it as UTC midnight, which renders as the
- * *previous* day for anyone west of Greenwich -- so a trip starting July 4th
- * displays as July 3rd. Splitting the parts and building a local date avoids
- * the timezone round trip entirely.
- */
+/** Dates are stored as `date`, not `timestamptz`, and arrive as "2026-07-04". */
 function toLocalDate(iso: string): Date | null {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
   if (!match) return null;
@@ -27,10 +15,7 @@ function format(date: Date, opts: Intl.DateTimeFormatOptions): string {
 const SAME_YEAR: Intl.DateTimeFormatOptions = { month: "short", day: "numeric" };
 const WITH_YEAR: Intl.DateTimeFormatOptions = { month: "short", day: "numeric", year: "numeric" };
 
-/**
- * Returns null when there is nothing worth showing, so callers can omit the
- * element rather than render an empty one.
- */
+/** Returns null when there is nothing worth showing. */
 export function formatTripDates(startsOn: string | null, endsOn: string | null): string | null {
   const start = startsOn ? toLocalDate(startsOn) : null;
   const end = endsOn ? toLocalDate(endsOn) : null;
@@ -49,12 +34,7 @@ export function formatTripDates(startsOn: string | null, endsOn: string | null):
   return `${format(start, WITH_YEAR)} – ${format(end, WITH_YEAR)}`;
 }
 
-/**
- * "Chicago and Milwaukee", "Chicago, Milwaukee and 2 more".
- *
- * A trip spanning cities is the whole point of the feature, so the card says
- * which ones rather than just counting them.
- */
+/** "Chicago and Milwaukee", "Chicago, Milwaukee and 2 more". */
 export function formatTripCities(cityNames: readonly string[], max = 2): string | null {
   if (cityNames.length === 0) return null;
   if (cityNames.length === 1) return cityNames[0];

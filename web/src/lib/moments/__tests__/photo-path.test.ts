@@ -15,11 +15,6 @@ describe("buildMomentPhotoPath", () => {
     expect(buildMomentPhotoPath(USER, OBJECT)).toBe(`${USER}/${OBJECT}.jpg`);
   });
 
-  /**
-   * The database compares this against `user_id::text`, which Postgres always
-   * renders lower-case. A path built with the upper-case spelling of the same
-   * uuid would fail that CHECK constraint at insert time.
-   */
   it("lower-cases both ids so the path matches what Postgres writes", () => {
     expect(buildMomentPhotoPath(USER.toUpperCase(), OBJECT.toUpperCase())).toBe(
       `${USER}/${OBJECT}.jpg`,

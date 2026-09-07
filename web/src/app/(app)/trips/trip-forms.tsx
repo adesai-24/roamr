@@ -123,14 +123,7 @@ export function DeleteTripButton({ tripId, tripName }: { tripId: string; tripNam
   );
 }
 
-/**
- * Assigning moments to a trip.
- *
- * Each row toggles independently and saves immediately rather than collecting a
- * selection behind a Save button: the list is long, the operation is one row,
- * and a half-finished selection lost to a navigation is worse than a few extra
- * round trips.
- */
+/** Assigning moments to a trip. */
 export function AssignMomentsList({
   tripId,
   moments,

@@ -14,10 +14,7 @@ import {
 
 const IDLE: ProfileActionState = { status: "idle" };
 
-/**
- * `useFormStatus` has to read from a child of the form, which is why this is
- * its own component rather than a hook call in the parent.
- */
+/** `useFormStatus` has to read from a child of the form. */
 function SubmitButton({ children }: { children: React.ReactNode }) {
   const { pending } = useFormStatus();
   return (
@@ -32,8 +29,7 @@ function StatusMessage({ state }: { state: ProfileActionState }) {
   const isError = state.status === "error";
   return (
     <p
-      // Announced rather than silently swapped in: someone using a screen
-      // reader gets no other signal that the save happened.
+      // Announced rather than silently swapped in.
       role="status"
       aria-live="polite"
       className={isError ? "text-danger text-sm" : "text-muted text-sm"}

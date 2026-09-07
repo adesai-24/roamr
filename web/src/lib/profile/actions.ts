@@ -8,13 +8,7 @@ import { validateDisplayName } from "./display-name";
 export type ProfileActionState =
   { status: "idle" } | { status: "saved"; message: string } | { status: "error"; message: string };
 
-/**
- * Profile writes go through the request-scoped client, never the admin one.
- * The `update only your own profile` policy is then the thing enforcing
- * ownership, so a bug in this file cannot let someone edit another account --
- * which is the whole reason the policy exists rather than an `eq("id", …)`
- * filter being considered sufficient.
- */
+/** Profile writes go through the request-scoped client, never the admin one. */
 
 const displayNameSchema = z.object({
   displayName: z.string().max(200, "That name is too long."),
@@ -40,8 +34,7 @@ export async function updateDisplayName(
     };
   }
 
-  // The shared validator rather than an inline check, so the rules stay the
-  // same wherever a display name is set -- onboarding included.
+  // The shared validator rather than an inline check.
   const result = validateDisplayName(parsed.data.displayName);
   if (!result.ok) {
     return { status: "error", message: result.message ?? "That name is not valid." };
@@ -64,14 +57,7 @@ export async function updateDisplayName(
 
 const visibilitySchema = z.object({ isPublic: z.boolean() });
 
-/**
- * The opt-in public account switch from the README's privacy bullet.
- *
- * Turning this on does not retroactively expose anything: moments carry their
- * own `visibility` column and stay friends-only until individually changed.
- * This flag only governs whether the profile itself is reachable by someone
- * who is not a friend.
- */
+/** The opt-in public account switch from the README's privacy bullet. */
 export async function updateAccountVisibility(
   _previous: ProfileActionState,
   formData: FormData,

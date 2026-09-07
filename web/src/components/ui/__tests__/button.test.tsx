@@ -61,8 +61,7 @@ describe("Button", () => {
   });
 
   it("clears a 44px tap target at every size", () => {
-    // The README's platform argument is that people open this on a phone, so a
-    // "small" button is small in padding, never in the area a thumb has to hit.
+    // The README's platform argument is that people open this on a phone.
     for (const size of ["sm", "md", "lg"] as const) {
       expect(buttonStyles({ size })).toMatch(/min-h-1[12]/);
     }
