@@ -219,7 +219,15 @@ export function CityAutocomplete({
         ) : null}
 
         {status === "ready" && results.length === 0 ? (
-          <li className="text-muted px-3 py-3 text-sm">No cities match that search.</li>
+          <li className="text-muted px-3 py-3 text-sm">
+            <span className="block">No cities match that search.</span>
+            {/* Search is restricted to place-level results, so parks, deserts and
+                landmarks never appear. Without this the empty state reads as a
+                broken search rather than the wrong kind of query. */}
+            <span className="mt-1 block text-xs">
+              Parks and landmarks are not searchable. Try the nearest city or town, then drop a pin.
+            </span>
+          </li>
         ) : null}
 
         {results.map((city, index) => (
