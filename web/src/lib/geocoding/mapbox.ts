@@ -40,7 +40,7 @@ export function buildDisplayName(
   return qualifier && qualifier !== name ? `${name}, ${qualifier}` : name;
 }
 
-/** Mapbox returns coordinates as `[longitude. */
+/** Mapbox orders coordinates [lng, lat], not [lat, lng]. */
 function readCoordinates(feature: Record<string, unknown>): { lat: number; lng: number } | null {
   const geometry = isRecord(feature.geometry) ? feature.geometry.coordinates : undefined;
   const source = Array.isArray(feature.center) ? feature.center : geometry;

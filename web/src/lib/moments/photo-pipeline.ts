@@ -15,7 +15,8 @@ export async function preparePhoto(
   file: Blob,
   deps: PhotoPipelineDeps = REAL_DEPS,
 ): Promise<PreparedPhoto> {
-  // EXIF must be read from the original bytes; encoding strips it.
+  // Read EXIF from the original bytes. Encoding strips it, so reversing these
+  // two lines would store the photo with the owner's GPS still in the file.
   const metadata = await deps.readMetadata(file);
   const encoded = await deps.encode(file);
   return { ...encoded, ...metadata };

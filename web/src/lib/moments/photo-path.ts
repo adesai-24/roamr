@@ -20,7 +20,7 @@ export function buildMomentPhotoPath(userId: string, objectId: string): string {
   if (!UUID.test(objectId)) {
     throw new Error("A photo path needs a generated object id.");
   }
-  // Lower-cased so the path matches `user_id.
+  // Lower-cased so the path matches the moments_photo_path_owned check.
   return `${userId.toLowerCase()}/${objectId.toLowerCase()}.jpg`;
 }
 

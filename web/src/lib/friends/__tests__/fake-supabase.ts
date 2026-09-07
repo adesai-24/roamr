@@ -149,7 +149,7 @@ export function createFakeDatabase(currentUserId: string | null): FakeDatabase {
     const builder: FakeBuilder = {
       select(columns?: string) {
         returning = true;
-        // PostgREST aliases (`displayName.
+        // Parses PostgREST alias syntax, eg `displayName:display_name`.
         projection = parseColumns(columns);
         return builder;
       },

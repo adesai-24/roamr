@@ -60,6 +60,7 @@ npm run dev
 npm test
 npm run test:e2e
 npm run typecheck && npm run lint && npm run format:check
+npm run docker:build
 ```
 
 After changing a migration, run `npm run db:reset && npm run db:types` and

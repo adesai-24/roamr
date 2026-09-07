@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
   // Every exit from here goes through safeRedirectPath.
   const next = safeRedirectPath(searchParams.get("next"), origin);
 
-  // Supabase reports its own failures (expired link.
+  // Supabase reports expired or invalid links as query params, not an error status.
   const providerError = searchParams.get("error");
   if (providerError) {
     const expired = searchParams.get("error_code") === "otp_expired";
