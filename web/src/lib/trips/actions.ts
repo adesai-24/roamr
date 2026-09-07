@@ -5,12 +5,7 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import type { TripActionResult } from "./types";
 
-/**
- * Every write goes through the request-scoped client, so the trips policies are
- * what enforce ownership. None of these actions filters by `owner_id` in
- * TypeScript: the policy already restricts the statement, and adding a
- * redundant filter here would make it ambiguous which layer is load-bearing.
- */
+/** Every write goes through the request-scoped client. */
 
 async function requireUserId(): Promise<TripActionResult<string>> {
   const supabase = await createClient();
@@ -27,11 +22,7 @@ const nameSchema = z
   .min(1, "Give the trip a name.")
   .max(100, "Keep the name to 100 characters or fewer.");
 
-/**
- * Dates arrive from `<input type="date">` as "" when left blank, which is not
- * the same as absent -- Postgres rejects "" for a `date` column, so it has to
- * become null before it gets anywhere near the database.
- */
+/** Dates arrive from `<input type="date">` as "" when left blank. */
 const optionalDate = z
   .string()
   .trim()
@@ -43,8 +34,7 @@ const tripSchema = z
   .object({ name: nameSchema, startsOn: optionalDate, endsOn: optionalDate })
   .refine(
     (t) => !t.startsOn || !t.endsOn || t.startsOn <= t.endsOn,
-    // Mirrors the trips_dates_ordered check constraint. Catching it here means
-    // a readable sentence instead of a Postgres constraint name.
+    // Mirrors the trips_dates_ordered check constraint.
     { message: "The end date is before the start date.", path: ["endsOn"] },
   );
 
@@ -118,12 +108,7 @@ export async function renameTrip(
   return { ok: true, data: null };
 }
 
-/**
- * Deleting a trip ungroups its moments; it never deletes photos. The column is
- * `on delete set null` for exactly this reason, and the confirmation copy in
- * the UI says so, because "delete trip" reads like it might take the pictures
- * with it.
- */
+/** Deleting a trip ungroups its moments; it never deletes photos. */
 export async function deleteTrip(tripId: string): Promise<TripActionResult<null>> {
   const auth = await requireUserId();
   if (!auth.ok) return auth;
@@ -164,9 +149,7 @@ export async function setMomentTrip(
     .eq("id", parsed.data.momentId);
 
   if (error) {
-    // 23514 is the moments_trip_must_be_owned trigger: the trip belongs to
-    // somebody else. Reported as not-found rather than not-yours, so the
-    // response does not confirm that a stranger's trip id is real.
+    // 23514 is the moments_trip_must_be_owned trigger: the trip belongs to somebody else.
     if (error.code === "23514") {
       return { ok: false, error: "That trip could not be found." };
     }

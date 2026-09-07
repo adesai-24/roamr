@@ -1,22 +1,10 @@
-/**
- * JPEGs carrying real EXIF, assembled byte by byte.
- *
- * The alternative was committing photos from somebody's camera roll, which is
- * both a privacy problem and an opaque one -- a reviewer cannot tell what a
- * binary fixture claims without a hex editor. Building the bytes here means the
- * fixture *is* its own documentation: the coordinates a test asserts on are
- * visible a few lines from the assertion.
- *
- * These are genuine EXIF segments, not stand-ins. They go through the same
- * `exifr` parse the browser runs, so a fixture that drifts from the spec fails
- * the test rather than quietly passing a hand-written mock.
- */
+/** JPEGs carrying real EXIF, assembled byte by byte. */
 
 const MARKER_SOI = 0xffd8;
 const MARKER_APP1 = 0xffe1;
 const MARKER_EOI = 0xffd9;
 
-/** TIFF field types, from the EXIF spec. Only the ones these fixtures use. */
+/** TIFF field types, from the EXIF spec. */
 const TYPE_ASCII = 2;
 const TYPE_LONG = 4;
 const TYPE_RATIONAL = 5;
@@ -77,13 +65,7 @@ function concat(chunks: readonly Uint8Array[]): Uint8Array {
   return out;
 }
 
-/**
- * One IFD plus the heap its oversized values spill onto.
- *
- * `heapStart` is an absolute offset from the start of the TIFF header, because
- * that -- not the start of the file or of the IFD -- is what every offset in an
- * EXIF segment is measured against.
- */
+/** One IFD plus the heap its oversized values spill onto. */
 function buildIfd(
   entries: readonly Entry[],
   heapStart: number,
@@ -135,20 +117,12 @@ export interface ExifJpegOptions {
   dateTimeOriginal?: string;
 }
 
-/**
- * A JPEG that is nothing but an EXIF segment: start-of-image, APP1,
- * end-of-image. There is no compressed image data because no test decodes one
- * -- downscaling is tested against the resize arithmetic directly, since jsdom
- * has no canvas to encode with.
- */
+/** A JPEG that is nothing but an EXIF segment: start-of-image, APP1, end-of-image. */
 export function buildExifJpeg(options: ExifJpegOptions = {}): Uint8Array {
   const { latitude, longitude, dateTimeOriginal } = options;
   const hasGps = Boolean(latitude && longitude);
   const hasExifIfd = Boolean(dateTimeOriginal);
 
-  // Layout, all offsets relative to the TIFF header: header, IFD0, then the
-  // sub-IFDs it points at. IFD0 has no heap of its own -- both its entries are
-  // pointers, which fit in the four bytes an entry carries inline.
   const tiffHeaderBytes = 8;
   const ifd0EntryCount = (hasExifIfd ? 1 : 0) + (hasGps ? 1 : 0);
   const exifIfdStart = tiffHeaderBytes + ifdByteLength(ifd0EntryCount);
@@ -244,17 +218,14 @@ export const TOKYO_JPEG = buildExifJpeg({
   dateTimeOriginal: "2024:07:04 18:30:15",
 });
 
-/**
- * Ushuaia, Argentina: southern *and* western, so a dropped sign on either axis
- * lands the photo on a different continent instead of a few metres away.
- */
+/** Ushuaia. */
 export const USHUAIA_JPEG = buildExifJpeg({
   latitude: { dms: dms(54, 48, 4.8), ref: "S" },
   longitude: { dms: dms(68, 18, 7.2), ref: "W" },
   dateTimeOriginal: "2023:01:12 09:05:00",
 });
 
-/** A photo with a timestamp but no GPS -- a scan, or location services off. */
+/** A photo with a timestamp but no GPS, a scan, or location services off. */
 export const NO_GPS_JPEG = buildExifJpeg({ dateTimeOriginal: "2022:11:02 07:00:00" });
 
 /** No EXIF at all: a screenshot, or an image some other tool already stripped. */

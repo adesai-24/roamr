@@ -17,8 +17,7 @@ export const metadata: Metadata = {
 const COVER_ASPECT = { width: 1, height: 1 };
 
 export default async function PlacesPage() {
-  // The layout has already established a session. Asking again costs nothing
-  // (`cache`) and means this page does not depend on a layout staying put.
+  // The layout has already established a session.
   const current = await getCurrentUser();
   if (!current) redirect(LOGIN_PATH);
 

@@ -12,13 +12,7 @@ export interface MomentPhotoProps {
   eager?: boolean;
 }
 
-/**
- * A moment's photo, or the space where it would be.
- *
- * A missing URL renders a placeholder rather than a broken image icon: signed
- * URLs are minted per render and a failure to mint one is a server-side
- * hiccup, not something the person did.
- */
+/** A moment's photo, or the space where it would be. */
 export function MomentPhoto({ url, alt, width, height, className, eager }: MomentPhotoProps) {
   const shared = cn("bg-surface-sunken w-full object-cover", className);
 
@@ -36,9 +30,7 @@ export function MomentPhoto({ url, alt, width, height, className, eager }: Momen
   }
 
   return (
-    /* next/image is the wrong tool here. These URLs expire in minutes, so the
-       optimiser would be caching a link that dies, and no static remotePatterns
-       entry can match a host that comes from runtime config. */
+    /** next/image is the wrong tool here. */
     // eslint-disable-next-line @next/next/no-img-element
     <img
       src={url}

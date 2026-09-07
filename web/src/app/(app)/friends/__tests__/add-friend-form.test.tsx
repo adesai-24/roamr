@@ -3,8 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { FriendActionResult } from "@/lib/friends/types";
 import { AddFriendForm } from "../add-friend-form";
 
-// The form imports the server actions for its defaults. A factory keeps
-// `next/headers` and the env schema out of jsdom entirely.
+// The form imports the server actions for its defaults.
 vi.mock("@/lib/friends/actions", () => ({
   sendFriendRequest: vi.fn(),
   acceptFriendRequest: vi.fn(),
@@ -63,8 +62,7 @@ describe("AddFriendForm", () => {
   });
 
   it("sends an empty box to the action rather than guessing at a message", async () => {
-    // The action owns every rule about what a username is; a second copy of
-    // those rules here is how the two of them start disagreeing.
+    // The action owns every rule about what a username is.
     const { send } = setup({ ok: false, error: "Type a username to send a request." });
 
     submit();

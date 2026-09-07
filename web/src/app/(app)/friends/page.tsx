@@ -14,9 +14,7 @@ export const metadata: Metadata = {
 };
 
 export default async function FriendsPage() {
-  // The layout above has already established there is a session. Asking again
-  // is free (`cache`) and means this page is not relying on a parent to have
-  // done the check.
+  // The layout above has already established there is a session.
   const current = await getCurrentUser();
   if (!current) redirect(LOGIN_PATH);
 

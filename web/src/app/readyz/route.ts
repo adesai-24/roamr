@@ -2,11 +2,7 @@ import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 
-/**
- * Readiness probe: should this instance receive traffic? Checks that config is
- * present and that Supabase is reachable, so a pod with a broken environment is
- * pulled from the load balancer instead of serving errors.
- */
+/** Readiness probe: should this instance receive traffic? */
 export async function GET() {
   const checks: Record<string, "ok" | "fail"> = {};
 
@@ -24,11 +20,7 @@ export async function GET() {
 
   if (supabaseUrl && anonKey) {
     try {
-      // The apikey header is required: hosted Supabase answers 401 on an
-      // unauthenticated health check, so probing without it reports every
-      // healthy project as down -- which in a cluster means pods that never
-      // become ready. The local CLI stack is laxer, which is exactly why this
-      // only shows up against a real project.
+      // The apikey header is required.
       const res = await fetch(`${supabaseUrl}/auth/v1/health`, {
         headers: { apikey: anonKey },
         signal: AbortSignal.timeout(3000),

@@ -3,17 +3,7 @@ import type { PhotoMetadata } from "../exif";
 import type { EncodedPhoto } from "../image";
 import { preparePhoto, type PhotoPipelineDeps } from "../photo-pipeline";
 
-/**
- * The ordering tests here are the point of this file.
- *
- * Re-encoding a photo through a canvas strips its EXIF. That is exactly what
- * makes the pipeline safe -- the GPS fix of wherever the photo was taken never
- * reaches storage -- and it is also what makes the order silently reversible: a
- * refactor that encodes first and reads metadata from the result still returns
- * a plausible-looking object with no coordinates, or worse, still works because
- * some encoder preserved them. Nothing else in the suite would notice, and the
- * only way to see the failure in production is to open a stored file.
- */
+/** The ordering tests here are the point of this file. */
 
 const METADATA: PhotoMetadata = {
   takenAt: new Date("2024-07-04T18:30:15.000Z"),
@@ -50,12 +40,7 @@ describe("preparePhoto", () => {
     expect(calls).toEqual(["readMetadata", "encode"]);
   });
 
-  /**
-   * The ordering assertion above passes even if the two steps are started
-   * together, so this pins the sequencing: nothing may begin encoding while
-   * the metadata read is still in flight, because that is the shape a
-   * `Promise.all` refactor takes.
-   */
+  /** The ordering assertion above passes even if the two steps are started together. */
   it("waits for the metadata read to finish before encoding starts", async () => {
     let releaseMetadata: (() => void) | undefined;
     const metadataDone = new Promise<void>((resolve) => {
@@ -71,8 +56,7 @@ describe("preparePhoto", () => {
       encode,
     });
 
-    // Let every already-scheduled microtask run. If the pipeline had kicked
-    // both off at once, the encoder would have been called by now.
+    // Let every already-scheduled microtask run.
     await Promise.resolve();
     await Promise.resolve();
     expect(encode).not.toHaveBeenCalled();
@@ -82,21 +66,14 @@ describe("preparePhoto", () => {
     expect(encode).toHaveBeenCalledTimes(1);
   });
 
-  /**
-   * The failure this catches is subtler than a swapped order: reading metadata
-   * from `encoded.blob` rather than from `file` runs the two steps in the right
-   * sequence and still finds nothing, because the encoder has already stripped
-   * it. Identity, not order, is what rules that out.
-   */
+  /** The failure this catches is subtler than a swapped order. */
   it("reads the EXIF from the original file, not from anything derived from it", async () => {
     const original = new Blob(["original"]);
     const { deps } = createDeps();
 
     await preparePhoto(original, deps);
 
-    // Identity, not equality: two Blobs with different bytes compare as equal
-    // under a structural matcher, so `toHaveBeenCalledWith` would pass happily
-    // on the encoded blob and prove nothing.
+    // Identity.
     expect(vi.mocked(deps.readMetadata).mock.calls[0]?.[0]).toBe(original);
     expect(vi.mocked(deps.encode).mock.calls[0]?.[0]).toBe(original);
   });

@@ -1,19 +1,5 @@
 import type { FriendshipRow } from "../types";
 
-/**
- * A Supabase client that stands in for Postgres closely enough to be worth
- * asserting against.
- *
- * The parts that are modelled are the ones that shape the calling code: the
- * primary key on (user_a, user_b) rejecting a duplicate pair with a 23505, and
- * the `user_a < user_b` check constraint rejecting an unordered insert with a
- * 23514. A fake that accepted anything would let the action forget to order the
- * pair and still pass, which is the one bug these tests exist to catch.
- *
- * It is not a database. Nothing here proves a policy holds -- that is what the
- * live-database tests in this directory are for.
- */
-
 export interface FakeProfileRow {
   id: string;
   username: string | null;
@@ -40,11 +26,7 @@ export interface FakeDatabase {
   profiles: FakeProfileRow[];
   friendships: FriendshipRow[];
   calls: FakeCall[];
-  /**
-   * Runs immediately before an insert reaches the store. The hook is how a race
-   * is expressed: it lets another request land in the window between the
-   * action's "does a row exist?" check and its insert.
-   */
+  /** Runs immediately before an insert reaches the store. */
   beforeInsert?: () => void;
   client: FakeClient;
 }
@@ -167,10 +149,7 @@ export function createFakeDatabase(currentUserId: string | null): FakeDatabase {
     const builder: FakeBuilder = {
       select(columns?: string) {
         returning = true;
-        // PostgREST aliases (`displayName:display_name`) are how the real
-        // queries bridge snake_case and camelCase, so the fake has to honour
-        // them -- otherwise every aliased column reads back as undefined and
-        // the tests would be asserting against a shape production never sees.
+        // Parses PostgREST alias syntax, eg `displayName:display_name`.
         projection = parseColumns(columns);
         return builder;
       },

@@ -20,11 +20,7 @@ function setup(variant: FriendRowVariant, result: FriendActionResult = { ok: tru
   return { accept, remove };
 }
 
-/**
- * Clicking starts a transition, and the action it awaits settles a microtask
- * later. Wrapping in `act` lets that settle before the assertion, rather than
- * after the test has already finished.
- */
+/** Clicking starts a transition, and the action it awaits settles a microtask later. */
 async function click(name: RegExp) {
   await act(async () => {
     fireEvent.click(screen.getByRole("button", { name }));
@@ -50,8 +46,7 @@ describe("FriendActions on an incoming request", () => {
   });
 
   it("does not ask twice before declining", async () => {
-    // A request is not a relationship. Confirming every tap is what teaches
-    // people to tap through the one confirmation that matters.
+    // A request is not a relationship.
     setup("incoming");
     await click(/^decline bob$/i);
     expect(screen.queryByText(/remove bob\?/i)).not.toBeInTheDocument();

@@ -1,14 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { orderPair, partnerId } from "../pair";
 
-/**
- * A deterministic uuid generator.
- *
- * Random pairs are the point -- a test that only ever feeds in already-sorted
- * input proves nothing about a function whose whole job is sorting -- but a
- * failure has to be reproducible, so the bits come from a seeded LCG rather
- * than from Math.random.
- */
+/** A deterministic uuid generator. */
 function makeRng(seed: number): () => number {
   let state = seed >>> 0;
   return () => {
@@ -68,11 +61,7 @@ describe("orderPair", () => {
     }
   });
 
-  /**
-   * The cases that a numeric or locale-aware comparison would get wrong.
-   * Postgres compares uuids as bytes, so "9" sorts before "a" and a leading
-   * zero is not a smaller number, it is an earlier byte.
-   */
+  /** The cases that a numeric or locale-aware comparison would get wrong. */
   it.each([
     [
       "digits sort before letters",
@@ -105,9 +94,7 @@ describe("orderPair", () => {
   });
 
   it("is byte-wise rather than case-insensitive", () => {
-    // Uuids reach this function lowercased, so this is documentation of the
-    // comparison rather than a case it has to handle: uppercase hex would sort
-    // into a different place, which is one more reason not to let it in.
+    // Uuids reach this function lowercased.
     const upper = "AAAAAAAA-0000-4000-8000-000000000000";
     const lower = "aaaaaaaa-0000-4000-8000-000000000000";
     expect(orderPair(lower, upper)).toEqual({ userA: upper, userB: lower });

@@ -1,12 +1,4 @@
 -- The v1 challenge catalog.
---
--- Idempotent: re-running upserts by slug and the `where ... is distinct from`
--- guard means an unchanged catalog updates zero rows, so `db reset` and a bare
--- re-seed converge on the same state. CI asserts this.
---
--- target_count is not set here. Each target seed recomputes it for its own
--- challenge from the rows it just wrote, so the count cannot drift from the
--- catalog when a target is added or removed.
 
 insert into public.challenges as c (
   slug, title, subtitle, description, category, cover_path, sort_order

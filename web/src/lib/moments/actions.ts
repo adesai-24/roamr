@@ -22,13 +22,7 @@ import type {
   UpdateMomentInput,
 } from "./types";
 
-/**
- * Every mutation in the core loop.
- *
- * Server actions rather than route handlers, per CLAUDE.md. Each one starts
- * with the session and validates its input against the same bounds the database
- * constrains, so a malformed payload is refused here and again by Postgres.
- */
+/** Every mutation in the core loop. */
 
 /** Matches the CHECK constraint on `moments.caption`. */
 const MAX_CAPTION_LENGTH = 500;
@@ -41,12 +35,6 @@ const captionSchema = z
   // An empty textarea means "no caption", not a caption that is the empty string.
   .transform((value) => (value && value.length > 0 ? value : null));
 
-/**
- * The picker's result crosses the trust boundary, so it is validated like any
- * other user input. It cannot lie its way into moving a city: resolveCity()
- * writes insert-if-absent, so a payload can only establish a place nobody has
- * added yet.
- */
 const citySelectionSchema = z.object({
   providerPlaceId: z.string().trim().min(1).max(200),
   name: z.string().trim().min(1).max(200),
@@ -81,8 +69,6 @@ const uuidSchema = z.string().uuid();
 const createMomentSchema = z
   .object({
     photoPath: z.string().min(1).max(300),
-    // A 2048px cap plus a little headroom; anything larger did not come from
-    // the upload pipeline.
     width: z.number().int().positive().max(10000),
     height: z.number().int().positive().max(10000),
     caption: captionSchema,
@@ -116,7 +102,7 @@ function firstIssue(error: z.ZodError): string {
   return error.issues[0]?.message ?? "That does not look right.";
 }
 
-/** One city write path, reused rather than reimplemented -- see CLAUDE.md. */
+/** One city write path, reused rather than reimplemented, see CLAUDE.md. */
 async function resolveSelection(city: string | CitySelection): Promise<CityRow | null> {
   if (typeof city === "string") {
     return findCityByProviderPlaceId(city);
@@ -124,14 +110,7 @@ async function resolveSelection(city: string | CitySelection): Promise<CityRow |
   return resolveCity(city);
 }
 
-/**
- * The collection a moment lands in, created on first use.
- *
- * Insert-if-absent onto the (user_id, city_id) unique constraint rather than
- * read-then-insert, so two photos uploaded at the same instant cannot fork one
- * person's Chicago into two collections. A conflict returns no row, which is
- * why the existing one is read back afterwards.
- */
+/** The collection a moment lands in, created on first use. */
 async function ensureCollection(userId: string, cityId: string): Promise<string> {
   const supabase = await createClient();
 
@@ -162,15 +141,7 @@ async function ensureCollection(userId: string, cityId: string): Promise<string>
   return (existing as { id: string }).id;
 }
 
-/**
- * A place to put the bytes.
- *
- * The browser uploads straight to Storage against a one-off signed URL rather
- * than posting the file through a server action. Two reasons: a server action
- * body is capped well below the size of a photo, and this way the *server*
- * chooses the object path. A client that never gets to name the path cannot
- * name somebody else's.
- */
+/** A place to put the bytes. */
 export async function createPhotoUploadTargetAction(): Promise<
   MomentActionResult<MomentUploadTarget>
 > {
@@ -191,14 +162,7 @@ export async function createPhotoUploadTargetAction(): Promise<
   return { ok: true, data: { bucket: MOMENT_PHOTO_BUCKET, path: data.path, token: data.token } };
 }
 
-/**
- * The city a photo's own GPS points at.
- *
- * Reverse geocoding is metered, so this sits behind the session check like the
- * city search does. A coordinate that resolves to nothing -- mid-ocean, or
- * further from a town than the provider will reach -- is not an error; the
- * person picks a city by hand instead.
- */
+/** The city a photo's own GPS points at. */
 export async function suggestCityAction(
   lat: number,
   lng: number,
@@ -235,8 +199,7 @@ export async function createMomentAction(
   }
   const value = parsed.data;
 
-  // The database says the same thing in a CHECK constraint. Saying it here too
-  // is CLAUDE.md's "authorize twice": neither layer alone is load-bearing.
+  // The database says the same thing in a CHECK constraint.
   if (!isMomentPhotoPathOwnedBy(value.photoPath, userId)) {
     return { ok: false, error: "That photo does not belong to this upload." };
   }
@@ -259,8 +222,7 @@ export async function createMomentAction(
         width: value.width,
         height: value.height,
         caption: value.caption,
-        // Null lets the column default to now(), which is the right answer for
-        // a photo whose file carried no capture time.
+        // Null lets the column default to now().
         taken_at: value.takenAt ?? undefined,
         pin_lat: value.pinLat,
         pin_lng: value.pinLng,
@@ -269,8 +231,7 @@ export async function createMomentAction(
       .single();
 
     if (error || !data) {
-      // The bytes are already in the bucket and now have no row pointing at
-      // them. Clearing up here is cheaper than a sweeper job later.
+      // The bytes are already in the bucket and now have no row pointing at them.
       await deletePhotoObjects([value.photoPath]);
       console.error("Could not create moment", error);
       return { ok: false, error: "Could not save that moment. Try again in a moment." };
@@ -302,8 +263,7 @@ export async function updateMomentAction(
   try {
     const supabase = await createClient();
 
-    // Read first, filtered to the owner. The select policy lets a friend read
-    // this row, so "it came back" is not the same as "they may edit it".
+    // Read first, filtered to the owner.
     const { data: existing, error: readError } = await supabase
       .from("moments")
       .select("id, user_city_id")
@@ -393,9 +353,7 @@ export async function deleteMomentAction(
       return { ok: false, error: "Could not delete that moment. Try again in a moment." };
     }
 
-    // Row first, then bytes. The other order risks a deleted object with a live
-    // row pointing at it, which is a moment that renders as a broken image for
-    // ever; this order risks an orphaned object, which is a cleanup job.
+    // Row first, then bytes.
     await deletePhotoObjects([moment.photo_path]);
 
     const cityId = (collection as { city_id: string } | null)?.city_id ?? null;

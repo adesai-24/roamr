@@ -14,9 +14,7 @@ export const metadata: Metadata = {
 
 export default async function ProfilePage() {
   const current = await getCurrentUser();
-  // Middleware already gates this route; the check is here so the types are
-  // narrowed without a non-null assertion, and so a future routing change
-  // cannot turn this page into an anonymous one silently.
+  // Middleware already gates this route.
   if (!current) redirect(LOGIN_PATH);
 
   const { profile, email } = current;
@@ -67,11 +65,11 @@ export default async function ProfilePage() {
           <dl className="flex flex-col gap-2 text-sm">
             <div className="flex justify-between gap-4">
               <dt className="text-muted">Email</dt>
-              <dd className="truncate">{email ?? "—"}</dd>
+              <dd className="truncate">{email ?? "Not set"}</dd>
             </div>
             <div className="flex justify-between gap-4">
               <dt className="text-muted">Username</dt>
-              <dd className="truncate">{username ? `@${username}` : "—"}</dd>
+              <dd className="truncate">{username ? `@${username}` : "Not set"}</dd>
             </div>
           </dl>
           {/* A plain form post rather than an onClick handler, so signing out

@@ -18,22 +18,12 @@ import { preparePhoto, type PreparedPhoto } from "@/lib/moments/photo-pipeline";
 import type { CitySelection } from "@/lib/moments/types";
 import { uploadPhoto } from "@/lib/moments/upload";
 
-/**
- * The core loop, as a form: pick a photo, confirm where it was, save.
- *
- * Everything except the photo and the city is optional, and the city usually
- * fills itself in -- so for a photo taken on a phone with location on, this is
- * two taps.
- */
+/** The core loop, as a form: pick a photo, confirm where it was, save. */
 
 interface SelectedCity {
   label: string;
   /** Where the pin map opens if this is the only location we have. */
   center: Coordinates;
-  /**
-   * A bare place id when the city row already exists (the reverse-geocoded
-   * suggestion resolved it), or the whole picker result when it may not.
-   */
   value: string | CitySelection;
 }
 
@@ -52,8 +42,7 @@ export function NewMomentForm() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
-  // Object URLs are held by the browser until they are revoked; replacing the
-  // photo three times would otherwise pin three decoded images in memory.
+  // Object URLs are held by the browser until they are revoked.
   const previewUrlRef = useRef<string | null>(null);
   const replacePreview = useCallback((url: string | null) => {
     if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
@@ -87,8 +76,7 @@ export function NewMomentForm() {
     setPhoto(prepared);
     replacePreview(URL.createObjectURL(prepared.blob));
 
-    // The city comes from the photo's own GPS where it had any. This is the
-    // whole reason EXIF is read before the re-encode strips it.
+    // The city comes from the photo's own GPS where it had any.
     if (prepared.lat !== null && prepared.lng !== null) {
       const suggestion = await suggestCityAction(prepared.lat, prepared.lng);
       if (suggestion.ok && suggestion.data) {
@@ -156,8 +144,7 @@ export function NewMomentForm() {
 
   const busy = status === "reading" || status === "saving";
 
-  // Where the pin map opens if somebody asks for one: the photo's own fix
-  // first, the city centre as a fallback, and nothing at all until one exists.
+  // Where the pin map opens if somebody asks for one.
   const photoCoordinates =
     photo && photo.lat !== null && photo.lng !== null ? { lat: photo.lat, lng: photo.lng } : null;
 
@@ -170,8 +157,7 @@ export function NewMomentForm() {
         <input
           id="moment-photo"
           type="file"
-          // No `capture`: the camera roll is the point, and forcing the camera
-          // would make posting a photo from yesterday impossible.
+          // No `capture`.
           accept="image/*"
           disabled={busy}
           onChange={(event) => {

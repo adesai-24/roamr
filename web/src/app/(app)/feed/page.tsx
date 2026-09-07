@@ -7,8 +7,7 @@ export const metadata: Metadata = {
 };
 
 export default async function FeedPage() {
-  // The layout above has already established there is a session; `cache` means
-  // asking again here costs nothing.
+  // The layout above has already established there is a session.
   const current = await getCurrentUser();
   const name = current?.profile?.displayName ?? current?.profile?.username ?? "there";
 

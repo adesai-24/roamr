@@ -4,15 +4,7 @@ import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
 import type { Coordinates } from "./pin-map";
 
-/**
- * The optional pin, and the machinery for keeping it optional.
- *
- * `ssr: false` plus a dynamic import means maplibre-gl is a separate chunk that
- * is only requested once somebody actually opens the map. The README calls the
- * pin an optional extra "for people who want to mark exactly where a photo was
- * taken", which is a minority -- everyone else should not be paying for a map
- * renderer to reach the save button.
- */
+/** The optional pin, and the machinery for keeping it optional. */
 const PinMap = dynamic(() => import("./pin-map"), {
   ssr: false,
   loading: () => (
@@ -25,17 +17,13 @@ const PinMap = dynamic(() => import("./pin-map"), {
 export interface PinFieldProps {
   value: Coordinates | null;
   onChange: (value: Coordinates | null) => void;
-  /**
-   * Where the map opens: the photo's own GPS if it had any, the city centre
-   * otherwise. Null means there is nowhere sensible to open it yet.
-   */
+  /** Where the map opens: the photo's own GPS if it had any, the city centre otherwise. */
   suggested: Coordinates | null;
   disabled?: boolean;
 }
 
 function format(value: number): string {
-  // Five decimal places is a little over a metre. More is false precision for
-  // a point someone tapped with a thumb.
+  // Five decimal places is a little over a metre.
   return value.toFixed(5);
 }
 

@@ -1,16 +1,4 @@
-/**
- * Row level security on `public.friendships`, against a real database.
- *
- * Every other test in this suite mocks the Supabase client, which means none of
- * them can tell a policy that works from a policy that was deleted. These can:
- * three people, three sessions, three clients, and assertions that the ones who
- * should not be able to do a thing cannot do it.
- *
- * Skipped unless a stack is reachable -- see src/test/rls.ts -- and run in CI
- * by the `rls` job, which starts one.
- *
- * @vitest-environment node
- */
+/** Row level security on `public.friendships`, against a real database. */
 
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import {
@@ -32,8 +20,7 @@ const COLUMNS = "user_a, user_b, requested_by, status, created_at, responded_at"
 /** Generous: every case is several round trips, and CI's first one is cold. */
 const DB_TIMEOUT = 20_000;
 
-// The reason rides along in the suite name, so a skipped run in somebody's
-// terminal says what it wanted rather than just showing a dash.
+// The reason rides along in the suite name.
 const SUITE = rlsEnabled
   ? "friendships row level security"
   : `friendships row level security (skipped: ${RLS_SKIP_REASON})`;
@@ -54,8 +41,7 @@ describe.skipIf(!rlsEnabled)(SUITE, () => {
   });
 
   afterEach(async () => {
-    // The accounts are reused across cases -- signing in costs rate limit --
-    // so the rows under test are what gets reset, not the people.
+    // The accounts are reused across cases.
     const ids = fixture.users.map((user) => user.id);
     await deleteRowsFor(fixture.admin, "friendships", "user_a", ids);
     await deleteRowsFor(fixture.admin, "friendships", "user_b", ids);
@@ -136,8 +122,7 @@ describe.skipIf(!rlsEnabled)(SUITE, () => {
     it(
       "gives a stranger nothing when they ask for the whole table",
       async () => {
-        // There is no browsing the graph: no mutual-friends view, no follower
-        // list, nothing that turns one account into a map of everyone else's.
+        // There is no browsing the graph.
         await befriend(alice, bob);
 
         const everything = await carol.db.from("friendships").select(COLUMNS);
@@ -234,8 +219,7 @@ describe.skipIf(!rlsEnabled)(SUITE, () => {
           status: "pending",
         });
 
-        // The 23505 the send action treats as "already requested" rather than
-        // as a fault. It is a real outcome, not a hypothetical one.
+        // The 23505 the send action treats as "already requested" rather than as a fault.
         expect(again.error?.code, again.error?.message).toBe("23505");
         expect(await storedRow(pair)).toMatchObject({ requested_by: alice.id });
       },
@@ -304,9 +288,7 @@ describe.skipIf(!rlsEnabled)(SUITE, () => {
     it(
       "will not let requested_by be rewritten",
       async () => {
-        // "Who asked" is what decides who may accept. If it can be rewritten,
-        // the rule that a requester cannot accept their own request is only a
-        // rule until somebody edits their way out of it.
+        // "Who asked" is what decides who may accept.
         const pair = await request(alice, bob);
 
         const rewrite = await bob.db
@@ -418,9 +400,7 @@ describe.skipIf(!rlsEnabled)(SUITE, () => {
     it(
       "is false while a request is pending, true once it is accepted, false once it is gone",
       async () => {
-        // This function is the single friendship check every other table's
-        // policy will call. If it ever answers true for a pending row, every
-        // one of those tables leaks at the same moment.
+        // This function is the single friendship check every other table's policy will call.
         const pair = await request(alice, bob);
         expect(await areFriends(alice, alice, bob)).toBe(false);
 

@@ -1,13 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { computeTargetSize, MAX_PHOTO_DIMENSION } from "../image";
 
-/**
- * Relative rather than absolute, because a panorama's ratio is a much bigger
- * number than a snapshot's and half a rounded pixel is worth more of it. Half a
- * percent is comfortably above what rounding one edge can cost and far below
- * what any real mistake -- a swapped axis, a cap applied to the wrong side --
- * would show up as.
- */
+/** Relative rather than absolute. */
 const ASPECT_TOLERANCE = 0.005;
 
 function aspect({ width, height }: { width: number; height: number }): number {
@@ -44,8 +38,7 @@ describe("computeTargetSize", () => {
   });
 
   it("puts the short edge on the nearest whole pixel, not one further out", () => {
-    // 3024 * 2048 / 4032 is exactly 1536; 2999 * 2048 / 4001 is not, and the
-    // result has to land within half a pixel of it rather than being truncated.
+    // 3024 * 2048 / 4032 is exactly 1536.
     for (const source of [
       { width: 4032, height: 3024 },
       { width: 4001, height: 2999 },
@@ -64,11 +57,7 @@ describe("computeTargetSize", () => {
     });
   });
 
-  /**
-   * Upscaling would cost bytes and add no detail -- the pixels it invents are
-   * interpolation, so a 640px photo blown up to 2048px is a bigger, blurrier
-   * 640px photo.
-   */
+  /** Upscaling would cost bytes and add no detail. */
   it("never upscales an image that is already smaller than the cap", () => {
     expect(computeTargetSize({ width: 640, height: 480 })).toEqual({ width: 640, height: 480 });
     expect(computeTargetSize({ width: 1, height: 1 })).toEqual({ width: 1, height: 1 });

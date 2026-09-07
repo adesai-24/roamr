@@ -1,9 +1,4 @@
 -- Guard: every table in `public` must have row level security enabled.
---
--- roamr's core promise is that moments are friends-only. A table shipped
--- without RLS is readable by any authenticated user via the anon key, and that
--- failure is silent. This function makes it loud: CI calls it after applying
--- migrations and fails the build on any offender.
 
 create or replace function public.tables_missing_rls()
 returns table (table_name text)
@@ -25,11 +20,6 @@ comment on function public.tables_missing_rls() is
   'Returns public tables with RLS disabled. Must return zero rows; enforced in CI.';
 
 -- Guard: re-running seeds must not change a single row.
---
--- A row-count comparison would miss a seed that deletes rows and inserts
--- different ones of the same total count, so this hashes actual row content
--- per table instead. CI runs seeds twice and compares this value before and
--- after the second run.
 
 create or replace function public.public_tables_row_hash()
 returns text

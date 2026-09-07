@@ -36,8 +36,7 @@ export default async function TripsPage() {
           <CardHeader>
             <CardTitle>No trips yet</CardTitle>
             <CardDescription>
-              A trip is just a label over some moments — “July 4th”, “Pinnacles”. Nothing has to
-              belong to one.
+              A label over some moments. “July 4th”, “Pinnacles”. Nothing has to belong to one.
             </CardDescription>
           </CardHeader>
           <CardContent>

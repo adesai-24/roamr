@@ -1,21 +1,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 
-/**
- * Reads the challenge catalog straight out of `supabase/seeds/*.sql`.
- *
- * The catalog is seed data, so the usual way to check it would be to apply the
- * seeds and query the result. That needs Docker, which puts it in CI only, and
- * the failure this guards against -- a coordinate with the wrong sign, a park
- * that quietly went missing, a slug typo -- is exactly the kind that applies
- * cleanly and is wrong anyway. Parsing the `values` lists gets those assertions
- * into `npm test`, where they run on every change in a second.
- *
- * The parser understands only what the seeds actually use: string literals with
- * doubled-quote escapes, numbers, and `null`. Anything else throws rather than
- * being skipped, so a seed the tests cannot read is a failing test and not a
- * silently unchecked one.
- */
+/** Reads the challenge catalog straight out of `supabase/seeds/*.sql`. */
 
 export type SqlLiteral = string | number | null;
 
@@ -63,10 +49,7 @@ export type SeedFileName = (typeof SEED_FILES)[keyof typeof SEED_FILES];
 
 export const CHALLENGES_MIGRATION = "20260104000000_challenges.sql";
 
-/**
- * Walk up from the working directory rather than resolving relative to this
- * file, so the helper works from `web/` (vitest) and from the repo root alike.
- */
+/** Walk up from the working directory rather than resolving relative to this file. */
 function repoRoot(): string {
   let dir = process.cwd();
   for (;;) {
@@ -87,11 +70,7 @@ export function readMigrationFile(fileName: string): string {
   return readFileSync(path.join(repoRoot(), "supabase", "migrations", fileName), "utf8");
 }
 
-/**
- * Remove `--` and block comments, keeping newlines so error offsets stay
- * roughly meaningful. Quote-aware: a comment marker inside a string literal is
- * data, not a comment.
- */
+/** Remove ` ` and block comments, keeping newlines so error offsets stay roughly meaningful. */
 export function stripSqlComments(sql: string): string {
   let out = "";
   let i = 0;

@@ -4,9 +4,7 @@ import { buttonStyles } from "@/components/ui/button";
 import { APP_HOME_PATH, LOGIN_PATH } from "@/lib/auth/routes";
 import { createClient } from "@/lib/supabase/server";
 
-// Reads the session, so it can never be prerendered. Stating it keeps
-// `next build` from touching the Supabase config during the Docker build, which
-// only carries the public half of it.
+// Reads the session, so it can never be prerendered.
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
@@ -15,8 +13,7 @@ export default async function Home() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Signed in: this page has nothing for you. Middleware takes it from here and
-  // routes on to onboarding if the username is still missing.
+  // Signed in: this page has nothing for you.
   if (user) redirect(APP_HOME_PATH);
 
   return (
