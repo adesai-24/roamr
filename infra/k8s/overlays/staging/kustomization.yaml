@@ -1,0 +1,68 @@
+# Staging: one replica short of production, no autoscaling, a staging Supabase
+# project. Cheap to run and safe to break.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: roamr-staging
+namePrefix: staging-
+
+resources:
+  - ../../base
+  - ingress.yaml
+
+labels:
+  # The base's label transformer only reaches the base's own resources, so the
+  # Ingress added here would otherwise carry none of the standard identity
+  # labels. includeSelectors stays false: these must not leak into the
+  # Deployment's immutable selector.
+  - includeSelectors: false
+    pairs:
+      app.kubernetes.io/environment: staging
+      app.kubernetes.io/name: roamr-web
+      app.kubernetes.io/instance: roamr-web
+      app.kubernetes.io/component: web
+      app.kubernetes.io/part-of: roamr
+      app.kubernetes.io/managed-by: kustomize
+
+# Point at the staging Supabase project. The anon key is public by design, so
+# it is safe to commit -- the service role key is not and lives in a Secret
+# created out of band (see infra/README.md).
+#
+# Remember these must match the NEXT_PUBLIC_* build args the image was built
+# with; a staging deploy needs a staging-built image, not the production one.
+patches:
+  - target:
+      kind: ConfigMap
+      name: roamr-web
+    patch: |-
+      - op: replace
+        path: /data/NEXT_PUBLIC_SUPABASE_URL
+        value: "https://staging-project.supabase.co"
+      - op: replace
+        path: /data/NEXT_PUBLIC_SITE_URL
+        value: "https://staging.roamr.example.com"
+
+  # Two replicas is still the floor: it is what makes maxUnavailable: 0 and the
+  # PodDisruptionBudget mean anything, and a staging environment that cannot
+  # reproduce a rolling update is not testing the thing that breaks.
+  - target:
+      kind: Deployment
+      name: roamr-web
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 2
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/cpu
+        value: 50m
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/memory
+        value: 192Mi
+
+images:
+  - name: roamr-web
+    newName: ghcr.io/adesai-24/roamr-web
+    # Staging tracks the latest build from main by digest-pinned SHA tag. Never
+    # `latest`: a rescheduled pod would silently pick up a different build than
+    # its siblings.
+    newTag: "staging-0f1e2d3"
