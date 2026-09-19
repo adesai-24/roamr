@@ -1,20 +1,63 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { Button, buttonStyles } from "@/components/ui/button";
 import { Field, fieldDescribedBy } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { LOGIN_PATH } from "@/lib/auth/routes";
-import { requestMagicLink, type LoginState } from "./actions";
+import { requestMagicLink, signInWithPassword, type LoginState } from "./actions";
 
 const EMAIL_FIELD_ID = "login-email";
 
 export function LoginForm({ next, initialError }: { next: string; initialError?: string }) {
+  const [method, setMethod] = useState<"link" | "password">("link");
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex gap-2" role="group" aria-label="Sign-in method">
+        <Button
+          type="button"
+          variant={method === "link" ? "primary" : "secondary"}
+          aria-pressed={method === "link"}
+          onClick={() => setMethod("link")}
+        >
+          Email link
+        </Button>
+        <Button
+          type="button"
+          variant={method === "password" ? "primary" : "secondary"}
+          aria-pressed={method === "password"}
+          onClick={() => setMethod("password")}
+        >
+          Password
+        </Button>
+      </div>
+      <LoginMethodForm
+        key={method}
+        next={next}
+        method={method}
+        initialError={method === "link" ? initialError : undefined}
+      />
+    </div>
+  );
+}
+
+function LoginMethodForm({
+  next,
+  initialError,
+  method,
+}: {
+  next: string;
+  initialError?: string;
+  method: "link" | "password";
+}) {
   const initialState: LoginState = initialError
     ? { status: "error", message: initialError }
     : { status: "idle" };
 
-  const [state, formAction, pending] = useActionState(requestMagicLink, initialState);
+  const [state, formAction, pending] = useActionState(
+    method === "password" ? signInWithPassword : requestMagicLink,
+    initialState,
+  );
 
   if (state.status === "sent") {
     return (
@@ -24,7 +67,7 @@ export function LoginForm({ next, initialError }: { next: string; initialError?:
           <p className="text-muted text-sm">
             We sent a sign-in link to{" "}
             <span className="text-foreground font-medium">{state.email}</span>. Open it on this
-            device and you are in.
+            browser and you are in.
           </p>
         </div>
         <p className="text-muted text-sm">
@@ -51,7 +94,11 @@ export function LoginForm({ next, initialError }: { next: string; initialError?:
       <Field
         id={EMAIL_FIELD_ID}
         label="Email"
-        hint="We send a link. No password to forget."
+        hint={
+          method === "link"
+            ? "We send a link. No password to forget."
+            : "Use the email for your account."
+        }
         error={error}
       >
         <Input
@@ -70,8 +117,26 @@ export function LoginForm({ next, initialError }: { next: string; initialError?:
         />
       </Field>
 
+      {method === "password" && (
+        <Field id="login-password" label="Password">
+          <Input
+            id="login-password"
+            name="password"
+            type="password"
+            autoComplete="current-password"
+            required
+          />
+        </Field>
+      )}
+
       <Button type="submit" size="lg" fullWidth disabled={pending}>
-        {pending ? "Sending…" : "Send sign-in link"}
+        {method === "password"
+          ? pending
+            ? "Signing in…"
+            : "Sign in with password"
+          : pending
+            ? "Sending…"
+            : "Send sign-in link"}
       </Button>
     </form>
   );

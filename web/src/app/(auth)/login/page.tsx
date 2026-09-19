@@ -32,8 +32,8 @@ export default async function LoginPage({
       <div className="flex flex-col gap-2">
         <h1 className="text-2xl font-semibold tracking-tight">Sign in</h1>
         <p className="text-muted text-sm">
-          Brag about touching grass to only your friends. Enter your email and we will send you a
-          link.
+          Brag about touching grass to only your friends. Sign in with an email link or your
+          password.
         </p>
       </div>
 
