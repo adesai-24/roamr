@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { Avatar } from "@/components/ui/avatar";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { getCurrentUser } from "@/lib/auth/profile";
+import { getCurrentUser, getSession } from "@/lib/auth/profile";
 import { LOGIN_PATH } from "@/lib/auth/routes";
 import { getFriendsOverview } from "@/lib/friends/queries";
 import type { FriendPerson } from "@/lib/friends/types";
@@ -14,12 +14,15 @@ export const metadata: Metadata = {
 };
 
 export default async function FriendsPage() {
-  // The layout above has already established there is a session.
-  const current = await getCurrentUser();
-  if (!current) redirect(LOGIN_PATH);
+  const session = await getSession();
+  if (!session) redirect(LOGIN_PATH);
 
-  const { friends, incoming, outgoing } = await getFriendsOverview(current.id);
-  const ownUsername = current.profile?.username ?? null;
+  // The profile is the layout's query too, so awaiting it here costs nothing extra.
+  const [current, { friends, incoming, outgoing }] = await Promise.all([
+    getCurrentUser(),
+    getFriendsOverview(session.id),
+  ]);
+  const ownUsername = current?.profile?.username ?? null;
 
   return (
     <div className="flex flex-col gap-6">

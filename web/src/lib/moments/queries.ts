@@ -108,11 +108,15 @@ export async function getMoment(userId: string, momentId: string): Promise<Momen
   const moment = data as unknown as MomentRow | null;
   if (!moment) return null;
 
-  const { data: collectionData, error: collectionError } = await supabase
-    .from("user_cities")
-    .select(`id, city:cities(${CITY_COLUMNS})`)
-    .eq("id", moment.userCityId)
-    .maybeSingle();
+  // The city lookup and the signing both need only the moment, so they run together.
+  const [{ data: collectionData, error: collectionError }, photos] = await Promise.all([
+    supabase
+      .from("user_cities")
+      .select(`id, city:cities(${CITY_COLUMNS})`)
+      .eq("id", moment.userCityId)
+      .maybeSingle(),
+    signMomentPhotos([moment]),
+  ]);
 
   if (collectionError) {
     throw new Error(`Could not load that moment's city: ${collectionError.message}`);
@@ -120,8 +124,6 @@ export async function getMoment(userId: string, momentId: string): Promise<Momen
 
   const city = (collectionData as unknown as { city: CityRow | null } | null)?.city ?? null;
   if (!city) return null;
-
-  const photos = await signMomentPhotos([moment]);
 
   return {
     moment: { ...moment, photoUrl: photos.get(moment.id) ?? null },

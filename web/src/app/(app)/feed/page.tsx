@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { MomentPhoto } from "@/components/moments/moment-photo";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { buttonStyles } from "@/components/ui/button";
-import { getCurrentUser } from "@/lib/auth/profile";
+import { getSession } from "@/lib/auth/profile";
 import { LOGIN_PATH } from "@/lib/auth/routes";
 import { getFeedPage } from "@/lib/feed/queries";
 import { formatMomentDate } from "@/lib/moments/format";
@@ -18,8 +18,7 @@ export default async function FeedPage({
 }: {
   searchParams: Promise<{ after?: string }>;
 }) {
-  const current = await getCurrentUser();
-  if (!current) redirect(LOGIN_PATH);
+  if (!(await getSession())) redirect(LOGIN_PATH);
 
   const { after } = await searchParams;
   const { items, nextCursor } = await getFeedPage(after);
