@@ -60,28 +60,25 @@ export async function getFeedPage(cursor?: string | null): Promise<FeedPage> {
   const unique = <T>(values: T[]) => [...new Set(values)];
 
   const [{ data: collections }, { data: authors }, photos] = await Promise.all([
+    // user_cities reaches cities through a single-column key, so this one embed is safe.
     supabase
       .from("user_cities")
-      .select("id, city_id")
+      .select("id, city:cities(id, display_name)")
       .in("id", unique(page.map((r) => r.user_city_id))),
     supabase
       .from("profiles")
       .select("id, username, display_name")
       .in("id", unique(page.map((r) => r.user_id))),
-    signMomentPhotos(page.map((r) => r.id)),
+    signMomentPhotos(page.map((r) => ({ id: r.id, photoPath: r.photo_path }))),
   ]);
 
-  const cityIdByCollection = new Map(
-    (collections ?? []).map((c) => [c.id as string, c.city_id as string]),
-  );
-
-  const { data: cityRows } = await supabase
-    .from("cities")
-    .select("id, display_name")
-    .in("id", unique([...cityIdByCollection.values()]));
-
-  const cityById = new Map(
-    (cityRows ?? []).map((c) => [c.id as string, c as { display_name: string }]),
+  const cityByCollection = new Map(
+    (
+      (collections ?? []) as unknown as {
+        id: string;
+        city: { id: string; display_name: string } | null;
+      }[]
+    ).map((c) => [c.id, c.city]),
   );
   const authorById = new Map(
     (authors ?? []).map((a) => [
@@ -92,14 +89,14 @@ export async function getFeedPage(cursor?: string | null): Promise<FeedPage> {
 
   const items: FeedItem[] = page.map((row) => {
     const author = authorById.get(row.user_id);
-    const cityId = cityIdByCollection.get(row.user_city_id) ?? null;
+    const city = cityByCollection.get(row.user_city_id) ?? null;
     return {
       id: row.id,
       userId: row.user_id,
       authorName: author?.display_name ?? author?.username ?? "Someone",
       authorUsername: author?.username ?? null,
-      cityId,
-      cityName: (cityId ? cityById.get(cityId)?.display_name : null) ?? "Somewhere",
+      cityId: city?.id ?? null,
+      cityName: city?.display_name ?? "Somewhere",
       caption: row.caption,
       takenAt: row.taken_at,
       createdAt: row.created_at,

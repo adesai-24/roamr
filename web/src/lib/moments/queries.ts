@@ -37,7 +37,7 @@ export async function listPlaces(userId: string): Promise<PlaceSummary[]> {
   }
 
   const rows = (data ?? []) as unknown as CollectionWithCity[];
-  const covers = await signCollectionCovers(rows.map((row) => row.id));
+  const covers = await signCollectionCovers(rows);
 
   return rows
     .filter((row): row is CollectionWithCity & { city: CityRow } => row.city !== null)
@@ -82,7 +82,7 @@ export async function getPlace(userId: string, cityId: string): Promise<PlaceDet
   }
 
   const moments = (momentData ?? []) as unknown as MomentRow[];
-  const photos = await signMomentPhotos(moments.map((moment) => moment.id));
+  const photos = await signMomentPhotos(moments);
 
   return {
     city: collection.city,
@@ -121,7 +121,7 @@ export async function getMoment(userId: string, momentId: string): Promise<Momen
   const city = (collectionData as unknown as { city: CityRow | null } | null)?.city ?? null;
   if (!city) return null;
 
-  const photos = await signMomentPhotos([moment.id]);
+  const photos = await signMomentPhotos([moment]);
 
   return {
     moment: { ...moment, photoUrl: photos.get(moment.id) ?? null },

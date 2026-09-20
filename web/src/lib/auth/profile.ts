@@ -26,20 +26,20 @@ const PROFILE_COLUMNS =
 export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
   const supabase = await createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return null;
+  // Signature-checked locally; middleware already refreshed the token, so this is not a round trip.
+  const { data: claimsData } = await supabase.auth.getClaims();
+  const claims = claimsData?.claims;
+  if (!claims) return null;
 
   const { data } = await supabase
     .from("profiles")
     .select(PROFILE_COLUMNS)
-    .eq("id", user.id)
+    .eq("id", claims.sub)
     .maybeSingle();
 
   return {
-    id: user.id,
-    email: user.email ?? null,
+    id: claims.sub,
+    email: claims.email ?? null,
     profile: (data as Profile | null) ?? null,
   };
 });
