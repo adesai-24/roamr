@@ -11,10 +11,8 @@ const signupPath = `${LOGIN_PATH}?next=${encodeURIComponent(ONBOARDING_PATH)}`;
 
 export default async function Home() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (user) redirect(APP_HOME_PATH);
+  const { data } = await supabase.auth.getClaims();
+  if (data?.claims) redirect(APP_HOME_PATH);
 
   return (
     <main className={styles.landing} id="top">

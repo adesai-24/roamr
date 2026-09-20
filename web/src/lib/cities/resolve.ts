@@ -73,3 +73,20 @@ export async function findCityByProviderPlaceId(
 
   return (data as CityRow | null) ?? null;
 }
+
+/**
+ * A selection posted back by the browser is only a claim about a place. Storing it as-is lets any
+ * signed-in user write a wrong name or coordinates onto a shared row that every friend then reads,
+ * so an id we have never seen is re-confirmed with the geocoder and the geocoder's copy is stored.
+ */
+export async function resolveVerifiedCity(selection: GeocodeResult): Promise<CityRow | null> {
+  const existing = await findCityByProviderPlaceId(selection.providerPlaceId);
+  if (existing) return existing;
+
+  const candidates = await getGeocodingProvider().searchCities(selection.displayName, {
+    limit: 10,
+    proximity: { lat: selection.lat, lng: selection.lng },
+  });
+  const genuine = candidates.find((c) => c.providerPlaceId === selection.providerPlaceId);
+  return genuine ? resolveCity(genuine) : null;
+}

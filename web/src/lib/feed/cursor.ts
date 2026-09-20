@@ -1,5 +1,10 @@
 import type { FeedItem } from "./types";
 
+// Both halves are spliced into a PostgREST `.or()` filter, so anything looser than these
+// shapes lets a hand-edited ?after= rewrite the filter.
+const ISO_TIMESTAMP = /^\d{4}-\d{2}-\d{2}T[\d:.]+(?:Z|[+-]\d{2}:?\d{2})?$/;
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 /**
  * Keyset cursors for the feed.
  *
@@ -19,6 +24,6 @@ export function decodeCursor(cursor: string | null | undefined): {
   if (separator <= 0) return null;
   const createdAt = cursor.slice(0, separator);
   const id = cursor.slice(separator + 1);
-  if (!createdAt || !id) return null;
+  if (!ISO_TIMESTAMP.test(createdAt) || !UUID.test(id)) return null;
   return { createdAt, id };
 }

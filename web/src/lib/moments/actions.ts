@@ -2,9 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { findCityByProviderPlaceId, resolveCity } from "@/lib/cities/resolve";
+import { findCityByProviderPlaceId, resolveCity, resolveVerifiedCity } from "@/lib/cities/resolve";
 import type { CityRow } from "@/lib/cities/types";
 import { getGeocodingProvider } from "@/lib/geocoding";
+import { isRateLimited } from "@/lib/rate-limit";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -107,7 +108,7 @@ async function resolveSelection(city: string | CitySelection): Promise<CityRow |
   if (typeof city === "string") {
     return findCityByProviderPlaceId(city);
   }
-  return resolveCity(city);
+  return resolveVerifiedCity(city);
 }
 
 /** The collection a moment lands in, created on first use. */
@@ -148,6 +149,11 @@ export async function createPhotoUploadTargetAction(): Promise<
   const auth = await requireUserId();
   if (!auth.ok) return auth;
 
+  // Every target is a writable storage slot that may never get a moment, so it is capped.
+  if (isRateLimited(`photo-upload:${auth.data}`, 30, 60_000)) {
+    return { ok: false, error: "Too many uploads at once. Wait a moment and try again." };
+  }
+
   const path = buildMomentPhotoPath(auth.data, newPhotoObjectId());
 
   const { data, error } = await createAdminClient()
@@ -173,6 +179,11 @@ export async function suggestCityAction(
   const parsed = pinSchema.safeParse({ pinLat: lat, pinLng: lng });
   if (!parsed.success) {
     return { ok: false, error: "That location is not valid." };
+  }
+
+  // Reverse geocoding is billed per request.
+  if (isRateLimited(`city-suggest:${auth.data}`, 30, 60_000)) {
+    return { ok: false, error: "Too many lookups. Wait a moment and try again." };
   }
 
   try {

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { MomentPhoto } from "@/components/moments/moment-photo";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { getCurrentUser } from "@/lib/auth/profile";
+import { getSession } from "@/lib/auth/profile";
 import { LOGIN_PATH } from "@/lib/auth/routes";
 import { formatTripCities, formatTripDates } from "@/lib/trips/format";
 import { listTrips } from "@/lib/trips/queries";
@@ -14,8 +14,7 @@ export const metadata: Metadata = {
 };
 
 export default async function TripsPage() {
-  const current = await getCurrentUser();
-  if (!current) redirect(LOGIN_PATH);
+  if (!(await getSession())) redirect(LOGIN_PATH);
 
   const trips = await listTrips();
 

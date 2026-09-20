@@ -9,16 +9,16 @@ import type { FeedItem, FeedPage } from "./types";
  * The feed is whatever the moments select policy lets you read, newest first.
  * No scoring, no ranking, no filtering beyond that.
  *
- * Deliberately no PostgREST embeds. moments.user_id references auth.users
- * rather than profiles, and user_cities is reached through a two-column key,
- * so neither join is expressible as an embed. Four small lookups keyed by id
- * are predictable where a nested select would fail at runtime.
+ * The city rides along as an embed. Authors cannot: moments.user_id references
+ * auth.users rather than profiles, so they are one lookup keyed by id, run
+ * alongside photo signing. Every extra sequential step is a full round trip.
  */
 
 interface MomentRow {
   id: string;
   user_id: string;
   user_city_id: string;
+  user_cities: { city: { id: string; display_name: string } | null } | null;
   photo_path: string;
   width: number;
   height: number;
@@ -30,7 +30,7 @@ interface MomentRow {
 export const FEED_PAGE_SIZE = 20;
 
 const MOMENT_COLUMNS =
-  "id, user_id, user_city_id, photo_path, width, height, caption, taken_at, created_at";
+  "id, user_id, user_city_id, photo_path, width, height, caption, taken_at, created_at, user_cities(city:cities(id, display_name))";
 
 export async function getFeedPage(cursor?: string | null): Promise<FeedPage> {
   const supabase = await createClient();
@@ -59,30 +59,14 @@ export async function getFeedPage(cursor?: string | null): Promise<FeedPage> {
 
   const unique = <T>(values: T[]) => [...new Set(values)];
 
-  const [{ data: collections }, { data: authors }, photos] = await Promise.all([
-    supabase
-      .from("user_cities")
-      .select("id, city_id")
-      .in("id", unique(page.map((r) => r.user_city_id))),
+  const [{ data: authors }, photos] = await Promise.all([
     supabase
       .from("profiles")
       .select("id, username, display_name")
       .in("id", unique(page.map((r) => r.user_id))),
-    signMomentPhotos(page.map((r) => r.id)),
+    signMomentPhotos(page.map((r) => ({ id: r.id, photoPath: r.photo_path }))),
   ]);
 
-  const cityIdByCollection = new Map(
-    (collections ?? []).map((c) => [c.id as string, c.city_id as string]),
-  );
-
-  const { data: cityRows } = await supabase
-    .from("cities")
-    .select("id, display_name")
-    .in("id", unique([...cityIdByCollection.values()]));
-
-  const cityById = new Map(
-    (cityRows ?? []).map((c) => [c.id as string, c as { display_name: string }]),
-  );
   const authorById = new Map(
     (authors ?? []).map((a) => [
       a.id as string,
@@ -92,14 +76,14 @@ export async function getFeedPage(cursor?: string | null): Promise<FeedPage> {
 
   const items: FeedItem[] = page.map((row) => {
     const author = authorById.get(row.user_id);
-    const cityId = cityIdByCollection.get(row.user_city_id) ?? null;
+    const city = row.user_cities?.city ?? null;
     return {
       id: row.id,
       userId: row.user_id,
       authorName: author?.display_name ?? author?.username ?? "Someone",
       authorUsername: author?.username ?? null,
-      cityId,
-      cityName: (cityId ? cityById.get(cityId)?.display_name : null) ?? "Somewhere",
+      cityId: city?.id ?? null,
+      cityName: city?.display_name ?? "Somewhere",
       caption: row.caption,
       takenAt: row.taken_at,
       createdAt: row.created_at,

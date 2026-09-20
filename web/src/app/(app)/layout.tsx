@@ -21,7 +21,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="flex min-h-dvh flex-col">
-      <header className="border-border bg-background/85 sticky top-0 z-10 border-b backdrop-blur">
+      <header className="border-border bg-background sticky top-0 z-10 border-b">
         <div className="mx-auto flex w-full max-w-2xl items-center gap-3 px-4 py-3">
           <Link
             href={onboarded ? APP_HOME_PATH : "/"}
@@ -58,7 +58,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       {onboarded ? (
         <nav
           aria-label="Primary"
-          className="border-border bg-background/95 fixed inset-x-0 bottom-0 z-10 border-t pb-[env(safe-area-inset-bottom)] backdrop-blur sm:hidden"
+          className="border-border bg-background fixed inset-x-0 bottom-0 z-10 border-t pb-[env(safe-area-inset-bottom)] sm:hidden"
         >
           <AppNav className="mx-auto max-w-2xl gap-1 px-2 py-1" />
         </nav>
