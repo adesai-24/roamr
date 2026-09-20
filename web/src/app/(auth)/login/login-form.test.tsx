@@ -6,6 +6,7 @@ import { requestMagicLink, signInWithPassword } from "./actions";
 vi.mock("./actions", () => ({
   requestMagicLink: vi.fn(async () => ({ status: "sent", email: "test@example.com" })),
   signInWithPassword: vi.fn(async () => ({ status: "error", message: "Check your password." })),
+  signInWithGoogle: vi.fn(),
 }));
 afterEach(() => {
   cleanup();

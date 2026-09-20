@@ -5,7 +5,7 @@ import { Button, buttonStyles } from "@/components/ui/button";
 import { Field, fieldDescribedBy } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { LOGIN_PATH } from "@/lib/auth/routes";
-import { requestMagicLink, signInWithPassword, type LoginState } from "./actions";
+import { requestMagicLink, signInWithGoogle, signInWithPassword, type LoginState } from "./actions";
 
 const EMAIL_FIELD_ID = "login-email";
 
@@ -13,6 +13,12 @@ export function LoginForm({ next, initialError }: { next: string; initialError?:
   const [method, setMethod] = useState<"link" | "password">("link");
   return (
     <div className="flex flex-col gap-4">
+      <form action={signInWithGoogle}>
+        <input type="hidden" name="next" value={next} />
+        <Button type="submit" size="lg" fullWidth variant="secondary">
+          Continue with Google
+        </Button>
+      </form>
       <div className="flex gap-2" role="group" aria-label="Sign-in method">
         <Button
           type="button"

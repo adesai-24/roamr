@@ -64,7 +64,20 @@ export async function encodePhoto(
     throw new Error("This browser cannot process photos. Try a newer one.");
   }
 
-  const bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
+  let bitmap: ImageBitmap;
+  try {
+    bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
+  } catch {
+    // Load the HEIC decoder only when the browser cannot decode the original.
+    try {
+      const { isHeic, heicTo } = await import("heic-to/csp");
+      const source = file instanceof File ? file : new File([file], "photo");
+      if (!(await isHeic(source))) throw new Error("Unsupported image");
+      bitmap = await heicTo({ blob: file, type: "bitmap" });
+    } catch {
+      throw new Error("Could not read that photo. Try another photo or export it as JPEG or PNG.");
+    }
+  }
   try {
     const target = computeTargetSize({ width: bitmap.width, height: bitmap.height }, max);
 

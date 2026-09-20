@@ -6,6 +6,7 @@ import { getCurrentUser, hasClaimedUsername } from "@/lib/auth/profile";
 import { APP_HOME_PATH, LOGIN_PATH } from "@/lib/auth/routes";
 import { signOut } from "./actions";
 import { AppNav } from "./app-nav";
+import styles from "./app.module.css";
 
 // Every page under this layout reads the session, so none of them can be prerendered.
 export const dynamic = "force-dynamic";
@@ -20,14 +21,14 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const displayName = profile?.displayName ?? profile?.username ?? null;
 
   return (
-    <div className="flex min-h-dvh flex-col">
-      <header className="border-border bg-background/85 sticky top-0 z-10 border-b backdrop-blur">
-        <div className="mx-auto flex w-full max-w-2xl items-center gap-3 px-4 py-3">
-          <Link
-            href={onboarded ? APP_HOME_PATH : "/"}
-            className="mr-auto font-semibold tracking-tight"
-          >
-            roamr
+    <div className={styles.shell}>
+      <a href="#app-content" className={styles.skip}>
+        Skip to content
+      </a>
+      <header className={styles.header}>
+        <div className={styles.headerInner}>
+          <Link href={onboarded ? APP_HOME_PATH : "/"} className={styles.brand}>
+            roamr<span aria-hidden="true">✳</span>
           </Link>
 
           {/* Onboarding renders inside this layout, and a nav bar full of links
@@ -35,13 +36,20 @@ export default async function AppLayout({ children }: { children: React.ReactNod
               off the username rather than off the pathname means the decision
               comes from data instead of from string matching. */}
           {onboarded ? (
-            <nav aria-label="Primary" className="hidden sm:block">
-              <AppNav className="gap-1" />
+            <nav aria-label="Primary" className={styles.desktopNav}>
+              <AppNav />
             </nav>
           ) : null}
 
-          <div className="flex items-center gap-2 sm:ml-2">
-            <Avatar name={displayName} size="sm" />
+          <div className={styles.account}>
+            {onboarded ? (
+              <Link href="/profile" className={styles.accountLink} aria-label="Your profile">
+                <Avatar name={displayName} size="sm" />
+              </Link>
+            ) : (
+              <Avatar name={displayName} size="sm" />
+            )}
+            <span className={styles.accountName}>{displayName}</span>
             <form action={signOut}>
               <Button type="submit" variant="ghost" size="sm">
                 Sign out
@@ -51,16 +59,13 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         </div>
       </header>
 
-      {/* pb-24 leaves room for the mobile tab bar, which is fixed and would
-          otherwise sit on top of the last item on the page. */}
-      <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-6 pb-24 sm:pb-6">{children}</main>
+      <main id="app-content" className={styles.content}>
+        {children}
+      </main>
 
       {onboarded ? (
-        <nav
-          aria-label="Primary"
-          className="border-border bg-background/95 fixed inset-x-0 bottom-0 z-10 border-t pb-[env(safe-area-inset-bottom)] backdrop-blur sm:hidden"
-        >
-          <AppNav className="mx-auto max-w-2xl gap-1 px-2 py-1" />
+        <nav aria-label="Primary" className={styles.mobileNav}>
+          <AppNav />
         </nav>
       ) : null}
     </div>

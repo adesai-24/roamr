@@ -2,12 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { MomentPhoto } from "@/components/moments/moment-photo";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Avatar } from "@/components/ui/avatar";
 import { buttonStyles } from "@/components/ui/button";
 import { getCurrentUser } from "@/lib/auth/profile";
 import { LOGIN_PATH } from "@/lib/auth/routes";
 import { getFeedPage } from "@/lib/feed/queries";
 import { formatMomentDate } from "@/lib/moments/format";
+import styles from "../app.module.css";
 
 export const metadata: Metadata = {
   title: "Feed · roamr",
@@ -24,46 +25,43 @@ export default async function FeedPage({
   const { after } = await searchParams;
   const { items, nextCursor } = await getFeedPage(after);
 
-  if (items.length === 0) {
-    return (
-      <div className="flex flex-col gap-6">
-        <h1 className="text-2xl font-semibold tracking-tight">Feed</h1>
-        <Card>
-          <CardHeader>
-            <CardTitle>Nothing here yet</CardTitle>
-            <CardDescription>
-              Moments from you and your friends show up here, newest first.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-wrap gap-2">
-            <Link href="/moments/new" className={buttonStyles()}>
-              Add a moment
-            </Link>
-            <Link href="/friends" className={buttonStyles({ variant: "secondary" })}>
-              Find friends
-            </Link>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
   return (
-    <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-semibold tracking-tight">Feed</h1>
+    <div className={`${styles.page} ${styles.narrow}`}>
+      <header className={styles.pageHeader}>
+        <div>
+          <h1>Feed</h1>
+          <p className="text-muted text-sm">Moments from you and your friends, newest first.</p>
+        </div>
+        <Link href="/moments/new" className={buttonStyles()}>
+          Add a moment
+        </Link>
+      </header>
 
-      <ul className="flex flex-col gap-6">
+      {items.length === 0 && (
+        <section className={styles.empty}>
+          <h2>Nothing here yet</h2>
+          <p>Add your first photo or find a friend to start your feed.</p>
+          <Link href="/friends" className={buttonStyles({ variant: "secondary" })}>
+            Find friends
+          </Link>
+        </section>
+      )}
+
+      <ul className={styles.feedList}>
         {items.map((item, index) => (
-          <li key={item.id} className="flex flex-col gap-2">
-            <div className="flex items-baseline justify-between gap-3">
-              <p className="min-w-0 truncate text-sm font-medium">
-                {item.authorName}
-                <span className="text-muted font-normal"> in {item.cityName}</span>
-              </p>
+          <li key={item.id} className={styles.feedItem}>
+            <div className={styles.feedMeta}>
+              <div className={styles.feedAuthor}>
+                <Avatar name={item.authorName} size="sm" />
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium">{item.authorName}</p>
+                  <p className="text-muted truncate text-xs">{item.cityName}</p>
+                </div>
+              </div>
               <span className="text-muted shrink-0 text-xs">{formatMomentDate(item.takenAt)}</span>
             </div>
 
-            <Link href={`/moments/${item.id}`}>
+            <Link href={`/moments/${item.id}`} className={styles.photoLink}>
               <MomentPhoto
                 url={item.photoUrl}
                 alt={item.caption ?? `Moment in ${item.cityName}`}

@@ -7,6 +7,7 @@ import { LOGIN_PATH } from "@/lib/auth/routes";
 import { formatMomentDate } from "@/lib/moments/format";
 import { getMoment } from "@/lib/moments/queries";
 import { MomentEditor } from "./moment-editor";
+import styles from "../../app.module.css";
 
 export const metadata: Metadata = {
   title: "Moment · roamr",
@@ -30,7 +31,7 @@ export default async function MomentPage({ params }: { params: Promise<{ momentI
   const takenAt = formatMomentDate(moment.takenAt);
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className={`${styles.page} ${styles.narrow}`}>
       <div className="flex flex-col gap-2">
         <Link href={`/places/${city.id}`} className="text-muted w-fit text-sm hover:underline">
           ← {city.name}
@@ -44,7 +45,7 @@ export default async function MomentPage({ params }: { params: Promise<{ momentI
         alt={moment.caption ?? `A moment from ${city.name}`}
         width={moment.width}
         height={moment.height}
-        className="rounded-card"
+        className={styles.momentImage}
         eager
       />
 

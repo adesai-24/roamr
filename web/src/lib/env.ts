@@ -7,6 +7,7 @@ const serverSchema = z.object({
   NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
   MAPBOX_ACCESS_TOKEN: z.string().optional(),
+  NEXT_PUBLIC_GOOGLE_PHOTOS_CLIENT_ID: z.string().optional(),
   NEXT_PUBLIC_SITE_URL: z.string().url().default("http://localhost:3000"),
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
 });
@@ -15,6 +16,7 @@ const clientSchema = serverSchema.pick({
   NEXT_PUBLIC_SUPABASE_URL: true,
   NEXT_PUBLIC_SUPABASE_ANON_KEY: true,
   NEXT_PUBLIC_SITE_URL: true,
+  NEXT_PUBLIC_GOOGLE_PHOTOS_CLIENT_ID: true,
 });
 
 export type ServerEnv = z.infer<typeof serverSchema>;
@@ -45,6 +47,7 @@ export function clientEnv(): ClientEnv {
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
+    NEXT_PUBLIC_GOOGLE_PHOTOS_CLIENT_ID: process.env.NEXT_PUBLIC_GOOGLE_PHOTOS_CLIENT_ID,
   });
   if (!parsed.success) {
     throw new Error(`Invalid public environment:\n${format(parsed.error)}`);

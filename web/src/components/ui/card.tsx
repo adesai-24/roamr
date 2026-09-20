@@ -5,6 +5,7 @@ export type CardProps = React.ComponentPropsWithRef<"div">;
 export function Card({ className, ...props }: CardProps) {
   return (
     <div
+      data-slot="card"
       className={cn("border-border bg-surface rounded-card border p-4 sm:p-5", className)}
       {...props}
     />
