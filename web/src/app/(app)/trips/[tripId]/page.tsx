@@ -19,16 +19,14 @@ export default async function TripPage({ params }: { params: Promise<{ tripId: s
   const session = await getSession();
   if (!session) redirect(LOGIN_PATH);
 
-  // Independent reads, so they go out together.
-  const [detail, assignable] = await Promise.all([
-    getTrip(tripId),
-    listAssignableMoments(session.id),
-  ]);
-  // getTrip returns null for both "no such trip" and "not visible to you".
+  const detail = await getTrip(tripId);
+  // getTrip returns null for both "no such trip" and "not visible to you". The assignable list
+  // signs up to 60 photos, so it waits until the trip is known to exist.
   if (!detail) notFound();
 
   const { trip, groups, momentCount } = detail;
   const dates = formatTripDates(trip.startsOn, trip.endsOn);
+  const assignable = await listAssignableMoments(session.id);
 
   return (
     <div className="flex flex-col gap-6">

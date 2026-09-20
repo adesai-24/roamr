@@ -9,8 +9,9 @@ import {
 } from "@/lib/auth/routes";
 import { clientEnv } from "@/lib/env";
 
-// Set once the profile has a username so later navigations skip the lookup. Not a security
-// boundary: it only decides whether to redirect to onboarding, and it names the user it is for.
+// Set once the profile has a username so later navigations skip the lookup. Onboarding is a UX
+// flow, not authorization: RLS and every server action ignore usernames, so someone who forges
+// this cookie only skips their own redirect. It names the user it is for so it cannot carry over.
 const ONBOARDED_COOKIE = "roamr_onboarded";
 
 /** Session refresh plus the routing rules that depend on who you are. */
