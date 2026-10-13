@@ -9,6 +9,11 @@ import {
 } from "@/lib/auth/routes";
 import { clientEnv } from "@/lib/env";
 
+// Set once the profile has a username so later navigations skip the lookup. Onboarding is a UX
+// flow, not authorization: RLS and every server action ignore usernames, so someone who forges
+// this cookie only skips their own redirect. It names the user it is for so it cannot carry over.
+const ONBOARDED_COOKIE = "roamr_onboarded";
+
 /** Session refresh plus the routing rules that depend on who you are. */
 export async function middleware(request: NextRequest) {
   // Middleware is bundled for the edge runtime.
@@ -36,34 +41,45 @@ export async function middleware(request: NextRequest) {
     },
   );
 
-  // getUser.
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // getClaims checks the JWT signature locally and refreshes it when expired. getUser is a
+  // network round trip to Auth on every request and every prefetch.
+  const { data: claimsData } = await supabase.auth.getClaims();
+  const userId = claimsData?.claims.sub ?? null;
 
   const { pathname, search } = request.nextUrl;
   const protectedRoute = requiresSession(pathname);
   const onLogin = pathname === LOGIN_PATH;
 
-  if (!user) {
+  if (!userId) {
     if (protectedRoute) {
       return redirectPreservingCookies(request, response, loginPathFor(pathname, search));
     }
     return response;
   }
 
-  // The profile lookup is the one extra round trip in this function.
   if (!protectedRoute && !onLogin) {
     return response;
   }
 
-  const { data } = await supabase
-    .from("profiles")
-    .select("username")
-    .eq("id", user.id)
-    .maybeSingle();
-  const username = (data as { username: string | null } | null)?.username ?? null;
-  const onboarded = typeof username === "string" && username.length > 0;
+  let onboarded = request.cookies.get(ONBOARDED_COOKIE)?.value === userId;
+  if (!onboarded) {
+    const { data } = await supabase
+      .from("profiles")
+      .select("username")
+      .eq("id", userId)
+      .maybeSingle();
+    const username = (data as { username: string | null } | null)?.username ?? null;
+    onboarded = typeof username === "string" && username.length > 0;
+    if (onboarded) {
+      response.cookies.set(ONBOARDED_COOKIE, userId, {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: request.nextUrl.protocol === "https:",
+        path: "/",
+        maxAge: 60 * 60 * 24 * 365,
+      });
+    }
+  }
 
   if (!onboarded) {
     if (pathname === ONBOARDING_PATH) return response;

@@ -20,9 +20,16 @@ beforeEach(() => {
   vi.clearAllMocks();
   passwordLogin.mockResolvedValue({ error: null });
   sendLink.mockResolvedValue({ error: null });
-  googleLogin.mockResolvedValue({ data: { url: "https://accounts.google.com/o/oauth2/auth" }, error: null });
+  googleLogin.mockResolvedValue({
+    data: { url: "https://accounts.google.com/o/oauth2/auth" },
+    error: null,
+  });
   vi.mocked(createClient).mockResolvedValue({
-    auth: { signInWithPassword: passwordLogin, signInWithOtp: sendLink, signInWithOAuth: googleLogin },
+    auth: {
+      signInWithPassword: passwordLogin,
+      signInWithOtp: sendLink,
+      signInWithOAuth: googleLogin,
+    },
   } as unknown as Awaited<ReturnType<typeof createClient>>);
 });
 

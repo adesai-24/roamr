@@ -3,7 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { MomentPhoto } from "@/components/moments/moment-photo";
 import { buttonStyles } from "@/components/ui/button";
-import { getCurrentUser } from "@/lib/auth/profile";
+import { getSession } from "@/lib/auth/profile";
 import { LOGIN_PATH } from "@/lib/auth/routes";
 import { formatCollectionSpan, formatMomentCount } from "@/lib/moments/format";
 import { listPlaces } from "@/lib/moments/queries";
@@ -17,11 +17,10 @@ export const metadata: Metadata = {
 const COVER_ASPECT = { width: 1, height: 1 };
 
 export default async function PlacesPage() {
-  // The layout has already established a session.
-  const current = await getCurrentUser();
-  if (!current) redirect(LOGIN_PATH);
+  const session = await getSession();
+  if (!session) redirect(LOGIN_PATH);
 
-  const places = await listPlaces(current.id);
+  const places = await listPlaces(session.id);
 
   return (
     <div className={styles.page}>
