@@ -1,11 +1,11 @@
 import type { NextConfig } from "next";
 
 // No script-src on purpose: a nonce policy would force every page dynamic, and these
-// directives close clickjacking, base-tag and form-hijack attacks without touching scripts.
+// directives close clickjacking and base-tag attacks without touching scripts. No form-action:
+// Chromium applies it to redirects, which would block the Google sign-in action before hydration.
 const CONTENT_SECURITY_POLICY = [
   "frame-ancestors 'none'",
   "base-uri 'self'",
-  "form-action 'self'",
   "object-src 'none'",
 ].join("; ");
 
