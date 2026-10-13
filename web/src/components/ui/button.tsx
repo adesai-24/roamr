@@ -8,19 +8,13 @@ const BASE_STYLES =
 
 const VARIANT_STYLES: Record<ButtonVariant, string> = {
   primary: "border-transparent bg-accent text-accent-foreground hover:bg-accent/90",
-  secondary: "border-border bg-surface text-foreground hover:bg-surface-sunken",
+  secondary: "border-oak/30 bg-surface text-foreground hover:bg-oak-soft/40",
   ghost: "border-transparent bg-transparent text-foreground hover:bg-surface-sunken",
-  // text-background rather than a literal white: the danger colour flips from a
-  // dark red to a light salmon between themes, and only the background token
-  // stays readable against both.
+  // text-background rather than a literal white.
   danger: "border-transparent bg-danger text-background hover:bg-danger/90",
 };
 
-/**
- * Every size clears 44px of height. The README's platform argument is that
- * people open this on a phone, so a "small" button is small in width and
- * padding, never in the area a thumb has to hit.
- */
+/** Every size clears 44px of height. */
 const SIZE_STYLES: Record<ButtonSize, string> = {
   sm: "min-h-11 px-3",
   md: "min-h-11 px-4",
@@ -33,12 +27,7 @@ export interface ButtonStyleOptions {
   fullWidth?: boolean;
 }
 
-/**
- * The class string on its own, for the cases where the thing being styled has
- * to be a `<Link>` or an `<a>`. A button that navigates is a link, and swapping
- * the element for a real anchor is cheaper than reimplementing anchor behaviour
- * on a button.
- */
+/** The class string on its own. */
 export function buttonStyles({
   variant = "primary",
   size = "md",
@@ -52,8 +41,7 @@ export type ButtonProps = React.ComponentPropsWithRef<"button"> & ButtonStyleOpt
 export function Button({ className, variant, size, fullWidth, type, ...props }: ButtonProps) {
   return (
     <button
-      // Defaulting to "button" means a button dropped into a form cannot submit
-      // it by accident; the ones that should say so explicitly.
+      // Defaulting to "button" means a button dropped into a form cannot submit it by accident.
       type={type ?? "button"}
       className={cn(buttonStyles({ variant, size, fullWidth }), className)}
       {...props}

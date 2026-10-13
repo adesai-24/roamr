@@ -1,11 +1,6 @@
 import { z } from "zod";
 
-/**
- * 12-factor config: every environment-dependent value enters the app here and
- * nowhere else. Validating at module load means a missing key fails the
- * container at startup with a readable message, rather than at 2am inside a
- * request handler with a stack trace about `undefined`.
- */
+/** 12-factor config: every environment-dependent value enters the app here and nowhere else. */
 
 const serverSchema = z.object({
   NEXT_PUBLIC_SUPABASE_URL: z.string().url(),
@@ -31,7 +26,7 @@ function format(error: z.ZodError): string {
 
 let cachedServerEnv: ServerEnv | undefined;
 
-/** Server-only config. Throws on first call if the environment is incomplete. */
+/** Server-only config. */
 export function serverEnv(): ServerEnv {
   if (cachedServerEnv) return cachedServerEnv;
   const parsed = serverSchema.safeParse(process.env);
@@ -44,10 +39,7 @@ export function serverEnv(): ServerEnv {
   return cachedServerEnv;
 }
 
-/**
- * Browser-safe config. Next inlines `process.env.NEXT_PUBLIC_*` at build time,
- * so these must be referenced as full literals rather than looked up dynamically.
- */
+/** Browser-safe config. */
 export function clientEnv(): ClientEnv {
   const parsed = clientSchema.safeParse({
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,

@@ -1,11 +1,4 @@
-/**
- * Where the auth flow can send someone, and which paths need a session.
- *
- * Pure and import-free so that middleware (edge runtime), server components and
- * unit tests can all share one definition. If these lists lived in middleware,
- * the open-redirect check below would be the one piece of security-relevant
- * code in the app with no test around it.
- */
+/** Where the auth flow can send someone, and which paths need a session. */
 
 export const LOGIN_PATH = "/login";
 export const ONBOARDING_PATH = "/onboarding";
@@ -14,13 +7,7 @@ export const AUTH_CALLBACK_PATH = "/auth/callback";
 /** Where a fully set-up person lands after signing in. */
 export const APP_HOME_PATH = "/feed";
 
-/**
- * Everything not listed here needs a session.
- *
- * Deny by default is the only version of this that stays correct: a route added
- * in a later PR is protected the moment it exists, rather than protected once
- * somebody remembers to add it to an allowlist.
- */
+/** Everything not listed here needs a session. */
 const PUBLIC_EXACT_PATHS: ReadonlySet<string> = new Set(["/", LOGIN_PATH, "/healthz", "/readyz"]);
 
 /** The auth callback runs *before* a session exists, so it cannot require one. */
@@ -42,16 +29,6 @@ export function loginPathFor(pathname: string, search = ""): string {
   return `${LOGIN_PATH}?next=${encodeURIComponent(`${pathname}${search}`)}`;
 }
 
-/**
- * Reduce an untrusted redirect target to a same-origin path, or give up and use
- * the fallback.
- *
- * The `next` parameter reaches us through a magic-link URL, which means it
- * travels through an email client and can be edited by anyone who can get a
- * link in front of the person signing in. An unchecked value here is a working
- * open redirect on the one page that has just handed out a session, so the rule
- * is: the result is always a path we recognised, never a string we were handed.
- */
 export function safeRedirectPath(
   candidate: string | null | undefined,
   origin?: string | null,
@@ -59,20 +36,17 @@ export function safeRedirectPath(
 ): string {
   if (!candidate) return fallback;
 
-  // Control characters can terminate the path early or smuggle a second header,
-  // depending on what parses the value next. Nothing legitimate contains them.
+  // Control characters can terminate the path early or smuggle a second header.
   if (hasControlCharacter(candidate)) return fallback;
 
   let path: string;
 
   if (candidate.startsWith("/")) {
-    // "//evil.com" and "/\evil.com" are both read as protocol-relative URLs by
-    // browsers, so they are absolute redirects wearing a relative disguise.
+    // "//evil.com" and "/\evil.com" are both read as protocol-relative URLs by browsers.
     if (candidate.startsWith("//") || candidate.startsWith("/\\")) return fallback;
     path = candidate;
   } else if (origin) {
-    // An absolute URL is acceptable only when it names our own origin, and even
-    // then it is reduced to the path rather than passed through.
+    // An absolute URL is acceptable only when it names our own origin.
     let parsed: URL;
     try {
       parsed = new URL(candidate);
@@ -85,8 +59,6 @@ export function safeRedirectPath(
     return fallback;
   }
 
-  // Bouncing back into the pages whose job is to get you *out* of this state
-  // only produces a redirect loop.
   const pathnameOnly = splitPathname(path);
   if (isPublicPath(pathnameOnly) && pathnameOnly !== "/") return fallback;
 

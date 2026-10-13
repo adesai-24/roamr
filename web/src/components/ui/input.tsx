@@ -1,14 +1,6 @@
 import { cn } from "@/lib/utils";
 
-/**
- * `text-base` is load-bearing, not a style choice: iOS Safari zooms the whole
- * page when a focused input's font is under 16px, and the zoom does not undo
- * itself on blur.
- *
- * The invalid state keys off `aria-invalid` so that the visual and the
- * assistive-technology signal can never disagree -- there is no separate
- * `error` prop to forget.
- */
+/** `text-base` is load-bearing. */
 export const inputStyles =
   "min-h-11 w-full rounded-card border border-border bg-surface px-3 py-2 text-base text-foreground placeholder:text-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:opacity-50 aria-[invalid=true]:border-danger";
 

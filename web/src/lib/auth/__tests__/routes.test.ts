@@ -28,8 +28,7 @@ describe("isPublicPath", () => {
   );
 
   it("protects a route nobody has written yet", () => {
-    // Deny by default is the whole point: a page added in a later PR is
-    // protected before anyone remembers to protect it.
+    // Deny by default is the whole point.
     expect(requiresSession("/moments/2026/some-photo")).toBe(true);
   });
 

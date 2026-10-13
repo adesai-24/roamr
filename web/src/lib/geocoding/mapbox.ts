@@ -1,15 +1,7 @@
 import { serverEnv } from "@/lib/env";
 import { GeocodingError, type GeocodeResult, type GeocodingProvider } from "./types";
 
-/**
- * Mapbox Geocoding v5, restricted to place-level results.
- *
- * Parsing and URL building are exported as pure functions so both can be tested
- * against fixtures with no network involved. That split is not incidental: the
- * two ways this integration breaks are a mangled coordinate pair and a mangled
- * query string, and both are invisible unless something asserts on them
- * directly.
- */
+/** Mapbox Geocoding v5, restricted to place-level results. */
 
 const GEOCODING_ENDPOINT = "https://api.mapbox.com/geocoding/v5/mapbox.places";
 
@@ -20,7 +12,7 @@ const DEFAULT_LIMIT = 5;
 /** A city picker that hangs is worse than one that says it failed. */
 const REQUEST_TIMEOUT_MS = 5000;
 
-// --- parsing ---------------------------------------------------------------
+// Parsing
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -30,12 +22,6 @@ function nonEmptyString(value: unknown): string | null {
   return typeof value === "string" && value.trim().length > 0 ? value.trim() : null;
 }
 
-/**
- * Mapbox hangs the administrative hierarchy off a `context` array whose entries
- * are typed by an `id` prefix (`region.*`, `country.*`, ...). Entries are absent
- * rather than null when they do not apply, which is the common case: city
- * states, dependencies and much of the world outside the US have no region.
- */
 function findContext(context: unknown, prefix: string): Record<string, unknown> | null {
   if (!Array.isArray(context)) return null;
   const match = context.find(
@@ -44,12 +30,7 @@ function findContext(context: unknown, prefix: string): Record<string, unknown> 
   return isRecord(match) ? match : null;
 }
 
-/**
- * Two parts, not three. The picker is used one-handed on a phone, where
- * "Chicago, Illinois" is scannable and "Chicago, Illinois, United States" wraps.
- * The region is dropped when it merely repeats the name (Mapbox reports Tokyo's
- * region as "Tokyo") so those fall back to the country and stay informative.
- */
+/** Two parts, not three. */
 export function buildDisplayName(
   name: string,
   admin1: string | null,
@@ -59,12 +40,7 @@ export function buildDisplayName(
   return qualifier && qualifier !== name ? `${name}, ${qualifier}` : name;
 }
 
-/**
- * Mapbox returns coordinates as `[longitude, latitude]` -- GeoJSON order, the
- * reverse of how everyone says it out loud. Getting this backwards is the
- * classic silent geocoding bug, so the destructuring below is deliberately
- * explicit and there is a test that fails if it is ever flipped.
- */
+/** Mapbox orders coordinates [lng, lat], not [lat, lng]. */
 function readCoordinates(feature: Record<string, unknown>): { lat: number; lng: number } | null {
   const geometry = isRecord(feature.geometry) ? feature.geometry.coordinates : undefined;
   const source = Array.isArray(feature.center) ? feature.center : geometry;
@@ -73,8 +49,7 @@ function readCoordinates(feature: Record<string, unknown>): { lat: number; lng: 
   const [lng, lat] = source;
   if (typeof lng !== "number" || typeof lat !== "number") return null;
   if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
-  // Same bounds the cities CHECK constraints enforce. A swapped pair usually
-  // trips this, so a bad parse is dropped here rather than rejected by Postgres.
+  // Same bounds the cities CHECK constraints enforce.
   if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return null;
 
   return { lat, lng };
@@ -102,8 +77,6 @@ export function parseMapboxFeature(raw: unknown): GeocodeResult | null {
     providerPlaceId,
     name,
     admin1,
-    // Mapbox lower-cases country short codes ("us"); cities.country_code stores
-    // the ISO 3166-1 form.
     countryCode: shortCode ? shortCode.toUpperCase() : null,
     displayName: buildDisplayName(name, admin1, countryName),
     lat: coordinates.lat,
@@ -122,7 +95,7 @@ export function parseMapboxResponse(raw: unknown): GeocodeResult[] {
   return results;
 }
 
-// --- request building ------------------------------------------------------
+// Request building
 
 function clampLimit(limit: number | undefined): number {
   if (typeof limit !== "number" || !Number.isFinite(limit)) return DEFAULT_LIMIT;
@@ -134,16 +107,14 @@ export function buildSearchUrl(
   accessToken: string,
   opts?: { limit?: number; proximity?: { lat: number; lng: number } },
 ): URL {
-  // Mapbox puts the search term in the path, where a `/` or `?` in a place name
-  // would otherwise change which endpoint is called.
+  // Mapbox puts the search term in the path.
   const url = new URL(`${GEOCODING_ENDPOINT}/${encodeURIComponent(query)}.json`);
   url.searchParams.set("access_token", accessToken);
-  // Cities only. Without this the picker offers addresses and points of
-  // interest, which cannot be deduped into a canonical city row.
+  // Cities only.
   url.searchParams.set("types", "place");
   url.searchParams.set("limit", String(clampLimit(opts?.limit)));
   if (opts?.proximity) {
-    // lng,lat again -- same order trap as the response.
+    // lng,lat again, same order trap as the response.
     url.searchParams.set("proximity", `${opts.proximity.lng},${opts.proximity.lat}`);
   }
   return url;
@@ -157,7 +128,7 @@ export function buildReverseUrl(lat: number, lng: number, accessToken: string): 
   return url;
 }
 
-// --- provider --------------------------------------------------------------
+// Provider
 
 function requireAccessToken(): string {
   const token = serverEnv().MAPBOX_ACCESS_TOKEN;
@@ -211,8 +182,7 @@ export const mapboxGeocodingProvider: GeocodingProvider = {
 
   async reverseCity(lat, lng) {
     const url = buildReverseUrl(lat, lng, requireAccessToken());
-    // No enclosing place is a normal answer out at sea or deep in a park, not
-    // an error -- callers get null and decide what to do.
+    // No enclosing place is a normal answer out at sea or deep in a park.
     return parseMapboxResponse(await fetchGeocoding(url))[0] ?? null;
   },
 };

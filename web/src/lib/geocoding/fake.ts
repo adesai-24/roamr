@@ -7,14 +7,7 @@ import tokyo from "./__fixtures__/mapbox-tokyo.json";
 import { parseMapboxResponse } from "./mapbox";
 import type { GeocodeResult, GeocodingProvider } from "./types";
 
-/**
- * The provider tests and local development run against.
- *
- * It is fixture-backed rather than hand-written, and it runs those fixtures
- * through the real Mapbox parser, so the objects it hands out are exactly the
- * shape production produces. A fake built from literals would drift from the
- * provider silently -- this one cannot, because a parser change moves both.
- */
+/** The provider tests and local development run against. */
 
 /** Reverse lookups beyond this fall outside any town and return null. */
 const MAX_REVERSE_DISTANCE_KM = 120;
@@ -37,8 +30,7 @@ function distanceKm(a: { lat: number; lng: number }, b: { lat: number; lng: numb
 function first(fixture: unknown): GeocodeResult {
   const [result] = parseMapboxResponse(fixture);
   if (!result) {
-    // A fixture that stops parsing is a broken test harness, and failing at
-    // import time is far easier to diagnose than an empty picker later.
+    // A fixture that stops parsing is a broken test harness.
     throw new Error("Geocoding fixture produced no result; the fixture or parser is broken.");
   }
   return result;
@@ -50,11 +42,7 @@ interface CatalogEntry {
   aliases: string[];
 }
 
-/**
- * Mariposa is here for a reason beyond rounding out the list: it is the town a
- * reverse lookup from inside Yosemite resolves to, and a later PR matches
- * challenge targets against exactly that.
- */
+/** Mariposa is here for a reason beyond rounding out the list. */
 const CATALOG: CatalogEntry[] = [
   { result: first(chicago), aliases: ["chicago", "chi"] },
   { result: first(mariposa), aliases: ["mariposa", "yosemite"] },
@@ -75,9 +63,7 @@ function matches(entry: CatalogEntry, query: string): boolean {
 }
 
 export const fakeGeocodingProvider: GeocodingProvider = {
-  // Not "mapbox": the id namespace happens to be Mapbox's, but rows written in
-  // a test or an unconfigured dev environment should be distinguishable from
-  // rows a real geocoder produced.
+  // Not "mapbox".
   name: "fake",
 
   async searchCities(query, opts) {

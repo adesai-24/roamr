@@ -1,16 +1,4 @@
 -- A US bucket list: thirty iconic places.
---
--- Unlike the other three challenges this list is not canonical -- nobody
--- publishes "the" US bucket list, so these are picks and they are arguable.
--- The rules used: recognisable without explanation, reachable by a normal
--- traveller, and spread across the country rather than clustered on two coasts.
--- National parks are deliberately mostly absent because they already have their
--- own challenge; the Grand Canyon is the one exception, on the grounds that a
--- US bucket list without it is not a US bucket list.
---
--- Radii are tight here on purpose. These are single landmarks, not parks: a
--- 20 km circle around Times Square would check itself off from three other
--- boroughs.
 
 insert into public.challenge_targets as t (
   challenge_id, slug, name, subtitle, lat, lng,

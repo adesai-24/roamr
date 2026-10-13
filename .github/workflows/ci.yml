@@ -87,6 +87,70 @@ jobs:
           fi
           echo "Seeds are idempotent."
 
+  rls:
+    name: RLS policies hold against a real database
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Start local stack
+        run: supabase start -x studio,realtime,imgproxy,inbucket,vector
+
+      - name: Apply migrations from scratch
+        run: supabase db reset
+
+      # The keys are generated per stack, so they are read back rather than
+      # hard-coded. Deliberately not the NEXT_PUBLIC_* names this workflow sets
+      # globally: those carry placeholders so `next build` can inline them, and
+      # a test harness keyed on them would think every job had a database.
+      - name: Point the test harness at the local stack
+        run: |
+          eval "$(supabase status -o env)"
+          {
+            echo "SUPABASE_TEST_URL=$API_URL"
+            echo "SUPABASE_TEST_ANON_KEY=$ANON_KEY"
+            echo "SUPABASE_TEST_SERVICE_ROLE_KEY=$SERVICE_ROLE_KEY"
+          } >> "$GITHUB_ENV"
+
+      - name: Install web dependencies
+        run: npm ci
+        working-directory: web
+
+      # Friends-only visibility is the product's whole promise, and it lives in
+      # the policies -- somewhere a mocked client can never reach. These tests
+      # sign in as several real people and assert that the ones who should not
+      # see a row cannot. They skip themselves everywhere else, so this job is
+      # the only place they actually run.
+      - name: Run the RLS tests
+        run: >
+          npx vitest run src/lib/friends/__tests__/friendships.rls.test.ts
+          --reporter=verbose --reporter=json --outputFile.json=rls-report.json
+        working-directory: web
+
+      # A suite that skips itself still exits 0, which would make this job a
+      # green light for nothing at all. If the environment did not reach the
+      # tests, that is a broken job, not a passing one.
+      - name: The RLS tests actually ran
+        run: |
+          node -e '
+            const report = require("./rls-report.json");
+            const passed = report.numPassedTests ?? 0;
+            if (passed === 0) {
+              console.error("::error::The RLS suite ran no tests -- it skipped itself.");
+              process.exit(1);
+            }
+            console.log(passed + " RLS tests ran against the local stack.");
+          '
+        working-directory: web
+
   docker:
     name: Container image builds
     runs-on: ubuntu-latest

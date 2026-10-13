@@ -2,14 +2,7 @@ import "server-only";
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 
-/**
- * The shape of a `public.profiles` row as this feature reads it.
- *
- * Hand-written rather than generated: `supabase gen types` writes one file for
- * the whole schema, and several feature branches are open at once, so a
- * generated file is a guaranteed merge conflict. Declaring the columns a
- * feature actually uses also documents what it touches.
- */
+/** The shape of a `public.profiles` row as this feature reads it. */
 export interface Profile {
   id: string;
   username: string | null;
@@ -26,22 +19,10 @@ export interface CurrentUser {
   profile: Profile | null;
 }
 
-/**
- * PostgREST aliases keep the snake_case database contract and the camelCase
- * TypeScript convention from having to meet in a hand-written mapper.
- */
 const PROFILE_COLUMNS =
   "id, username, displayName:display_name, avatarPath:avatar_path, isPublic:is_public, createdAt:created_at, updatedAt:updated_at";
 
-/**
- * The signed-in person and their profile, or null when there is no session.
- *
- * `cache` dedupes this within a single render pass, so a layout and the page
- * inside it can both ask without paying for it twice.
- *
- * Uses `getUser()` rather than `getSession()` deliberately: getSession trusts
- * whatever is in the cookie, and this value decides what gets rendered.
- */
+/** The signed-in person and their profile, or null when there is no session. */
 export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
   const supabase = await createClient();
 

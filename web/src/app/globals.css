@@ -1,37 +1,33 @@
 @import "tailwindcss";
 
-/*
- * Design tokens. Every colour used anywhere in the app is defined here in the
- * light palette first, then overridden for dark -- so a component never hard-
- * codes a hex value and dark mode can never be half-implemented.
- *
- * The palette is warm rather than the usual cool grey: the app is about photos
- * of places you went with people you like, and a warm ground flatters
- * photography where a blue-grey one fights it.
- */
+/* Dark green and oak. Every colour lives here; nothing hard-codes a hex. */
 :root {
-  --background: #fdfcf9;
+  --background: #faf7f1;
   --surface: #ffffff;
-  --surface-sunken: #f4f2ec;
-  --foreground: #1c1b16;
-  --muted: #6f6b5f;
-  --border: #e4e0d6;
-  --accent: #3f7d4e;
+  --surface-sunken: #f1ebe0;
+  --foreground: #16241c;
+  --muted: #6d6459;
+  --border: #e0d5c3;
+  --accent: #2f5d47;
   --accent-foreground: #ffffff;
+  --oak: #9a6b3d;
+  --oak-soft: #e8d6bd;
   --danger: #a3392f;
   --radius: 0.75rem;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #14140f;
-    --surface: #1e1d18;
-    --surface-sunken: #100f0b;
-    --foreground: #f2efe6;
-    --muted: #a09a8c;
-    --border: #322f27;
-    --accent: #6fbf83;
-    --accent-foreground: #0f1a12;
+    --background: #111a15;
+    --surface: #1a241e;
+    --surface-sunken: #0c120e;
+    --foreground: #ece6da;
+    --muted: #9a9285;
+    --border: #2c382f;
+    --accent: #6fae8a;
+    --accent-foreground: #0c1710;
+    --oak: #c08a52;
+    --oak-soft: #3a2c1d;
     --danger: #e0796c;
   }
 }
@@ -45,6 +41,8 @@
   --color-border: var(--border);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
+  --color-oak: var(--oak);
+  --color-oak-soft: var(--oak-soft);
   --color-danger: var(--danger);
   --radius-card: var(--radius);
   --font-sans:
@@ -53,7 +51,6 @@
 
 body {
   font-family: var(--font-sans);
-  /* Photo grids and the feed are the main surfaces; a stray horizontal
-     scrollbar on a phone is the most common way that goes wrong. */
+  /* A stray horizontal scrollbar on a phone is the usual failure here. */
   overflow-x: hidden;
 }

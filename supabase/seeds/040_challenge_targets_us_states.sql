@@ -1,15 +1,4 @@
 -- All 50 US states.
---
--- This is the challenge that forced match_mode to exist. A state is a polygon,
--- not a circle: a radius large enough to cover Texas also covers most of
--- Oklahoma, and one small enough to exclude Oklahoma misses El Paso. So these
--- match by name instead -- match_value is compared against the first-level
--- administrative area the geocoder returns for a moment's city, which is why it
--- is the full state name ('Illinois') and not the postal code ('IL').
---
--- lat/lng are still seeded: they are the state's approximate geographic centre,
--- used for map pins and list thumbnails. They are display data, never the match
--- key for these rows.
 
 insert into public.challenge_targets as t (
   challenge_id, slug, name, subtitle, lat, lng,

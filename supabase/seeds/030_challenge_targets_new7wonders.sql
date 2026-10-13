@@ -1,14 +1,4 @@
 -- The New7Wonders of the World, as voted in 2007.
---
--- The only non-US challenge in the v1 catalog, so it is also the one that
--- proves the schema is not quietly US-shaped: country_code varies, three of the
--- seven sit at positive longitudes, and two are south of the equator.
---
--- The Great Wall is the awkward one -- it runs for thousands of kilometres, so
--- no single point plus radius describes it. The seeded point is Badaling with a
--- radius wide enough to cover the restored sections most visitors reach from
--- Beijing (Badaling, Juyongguan, Mutianyu). Walking a remote section in Gansu
--- will not auto-match; ticking it off by hand still works.
 
 insert into public.challenge_targets as t (
   challenge_id, slug, name, subtitle, lat, lng,

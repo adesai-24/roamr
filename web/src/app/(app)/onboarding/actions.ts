@@ -19,9 +19,9 @@ export interface ClaimUsernameState {
   };
 }
 
-/** Postgres unique violation. The only error here that is a normal outcome. */
+/** Postgres unique violation. */
 const UNIQUE_VIOLATION = "23505";
-/** Postgres check violation -- the database rejecting a username we let through. */
+/** Postgres check violation, the database rejecting a username we let through. */
 const CHECK_VIOLATION = "23514";
 
 const DISPLAY_NAME_MAX = 60;
@@ -43,15 +43,7 @@ const claimSchema = z.object({
     .max(DISPLAY_NAME_MAX, `Keep it under ${DISPLAY_NAME_MAX} characters.`),
 });
 
-/**
- * Claim a username and finish onboarding.
- *
- * There is deliberately no "is this taken?" query before the update. Any such
- * check is a time-of-check/time-of-use race -- two people can pass it a
- * millisecond apart -- so the unique index is the only answer that means
- * anything, and the code is written to treat its rejection as an ordinary
- * outcome rather than as a 500.
- */
+/** Claim a username and finish onboarding. */
 export async function claimUsername(
   _previous: ClaimUsernameState,
   formData: FormData,
@@ -79,8 +71,7 @@ export async function claimUsername(
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Authorize in the action as well as in RLS: a missing check in either layer
-  // must not be enough on its own.
+  // Authorize in the action as well as in RLS.
   if (!user) redirect(LOGIN_PATH);
 
   const { error } = await supabase

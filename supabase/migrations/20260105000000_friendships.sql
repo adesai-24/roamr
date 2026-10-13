@@ -1,21 +1,11 @@
--- Friendships: the mutual, symmetric edge that every privacy rule in roamr
--- ultimately resolves against.
---
--- A friendship is one thing shared by two people, not two rows pointing at each
--- other. Storing it once, with the pair always ordered the same way, means the
--- database itself forbids the states that a two-row design has to police in
--- application code: A friends with B while B is not friends with A, duplicate
--- requests in opposite directions, or an accept that updates one side only.
+-- Friendships.
 
 create table public.friendships (
-  -- Canonically ordered: user_a is always the smaller uuid. The check below is
-  -- what makes the primary key a real uniqueness guarantee -- without it,
-  -- (A,B) and (B,A) are two distinct keys and the pair can be duplicated.
+  -- Canonically ordered: user_a is always the smaller uuid.
   user_a uuid not null references auth.users (id) on delete cascade,
   user_b uuid not null references auth.users (id) on delete cascade,
 
-  -- Which of the two sent it. Needed to render "you requested" versus "they
-  -- requested", and to stop a requester from accepting their own request.
+  -- Which of the two sent it.
   requested_by uuid not null references auth.users (id) on delete cascade,
 
   status text not null default 'pending',
@@ -41,8 +31,7 @@ comment on table public.friendships is
 comment on column public.friendships.requested_by is
   'Who sent the request. Must be one of the two participants.';
 
--- The primary key already serves lookups anchored on user_a. This covers the
--- other direction, which is half of every "who are my friends" query.
+-- The primary key already serves lookups anchored on user_a.
 create index friendships_user_b_idx on public.friendships (user_b);
 
 -- Rendering the incoming-requests inbox: pending rows the caller did not send.
@@ -50,22 +39,7 @@ create index friendships_pending_idx
   on public.friendships (status, requested_by)
   where status = 'pending';
 
--- ---------------------------------------------------------------------------
--- are_friends: the single source of truth for "can these two see each other's
--- things". Every table added from here on calls this from its RLS policy
--- rather than re-deriving the answer, because a privacy rule that is written
--- twice is a privacy rule that will eventually disagree with itself.
---
--- security definer is required, not incidental. This gets called from inside
--- other tables' policies, where the caller cannot select from friendships
--- under its own rights -- and having it read through the caller's RLS would
--- also recurse. It is safe to elevate here because the function returns a
--- single boolean about a pair the caller already named, and leaks no rows.
---
--- The empty search_path is what keeps that elevation from being exploitable:
--- an unqualified `friendships` inside a definer function resolves through the
--- *caller's* search_path, so the caller gets to choose which table it means.
--- ---------------------------------------------------------------------------
+-- are_friends: the single source of truth for "can these two see each other's things".
 create or replace function public.are_friends(user_one uuid, user_two uuid)
 returns boolean
 language sql
@@ -85,29 +59,20 @@ $$;
 comment on function public.are_friends(uuid, uuid) is
   'True when the two users have an accepted friendship. The only friendship check in the codebase; call it from RLS rather than re-deriving.';
 
--- Executable by signed-in callers only. Deliberately not granted to anon: a
--- logged-out visitor is nobody's friend, so any future policy covering public
--- content must gate on the content's own visibility column and must not call
--- this for the anon role -- doing so would raise a permission error rather
--- than returning false, which is a confusing way to discover the mistake.
+-- Executable by signed-in callers only.
 revoke all on function public.are_friends(uuid, uuid) from public;
 grant execute on function public.are_friends(uuid, uuid) to authenticated;
 
 alter table public.friendships enable row level security;
 
--- You can see a friendship only if you are in it. There is no browsing the
--- graph -- no mutual-friends view, no follower list, nothing that would let one
--- person enumerate another's connections.
+-- You can see a friendship only if you are in it.
 create policy "participants can read their own friendships"
   on public.friendships
   for select
   to authenticated
   using ((select auth.uid()) in (user_a, user_b));
 
--- Sending a request. The row must start pending, must name the sender as
--- requester, and the sender must be one of the two people in it -- so nobody
--- can fabricate a friendship between two other accounts, or insert one that is
--- already accepted.
+-- Sending a request.
 create policy "people can send a friend request"
   on public.friendships
   for insert
@@ -119,13 +84,7 @@ create policy "people can send a friend request"
     and responded_at is null
   );
 
--- Accepting. USING sees the row as it was, WITH CHECK the row as it will be,
--- so together these say: only a pending request, only by the person who did
--- not send it, and only into the accepted state.
---
--- Because USING requires status = 'pending', an accepted friendship can never
--- be updated again -- there is no path back to pending, and no way to rewrite
--- who requested it. Unfriending is a delete, not a status change.
+-- Accepting.
 create policy "the recipient can accept a pending request"
   on public.friendships
   for update
@@ -137,9 +96,7 @@ create policy "the recipient can accept a pending request"
   )
   with check (status = 'accepted' and responded_at is not null);
 
--- One policy covers declining, cancelling, and unfriending: in every case a
--- participant is removing a row they are part of. Modelling them separately
--- would mean three ways to express the same permission.
+-- One policy covers declining.
 create policy "either participant can remove the friendship"
   on public.friendships
   for delete
@@ -148,10 +105,7 @@ create policy "either participant can remove the friendship"
 
 grant select, insert, delete on table public.friendships to authenticated;
 
--- Column-scoped update grant. The accept policy already constrains the values,
--- but this makes the narrower point structurally: status and responded_at are
--- the only columns a client may ever write on an existing row, so a future
--- policy cannot accidentally expose requested_by to rewriting.
+-- Column-scoped update grant.
 grant update (status, responded_at) on table public.friendships to authenticated;
 
 revoke all on table public.friendships from anon;

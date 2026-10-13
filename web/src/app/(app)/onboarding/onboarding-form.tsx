@@ -21,9 +21,7 @@ export function OnboardingForm({ defaultDisplayName }: { defaultDisplayName?: st
   const [state, formAction, pending] = useActionState(claimUsername, EMPTY_STATE);
   const [username, setUsername] = useState(state.values?.username ?? "");
 
-  // Client-side validation is a courtesy, not a gate: the same rules run again
-  // in the action and again as a check constraint. Showing the problem while
-  // someone types just saves them a round trip.
+  // Client-side validation is a courtesy.
   const normalized = normalizeUsername(username);
   const localCheck = normalized.length > 0 ? validateUsername(normalized) : null;
   const localError = localCheck && !localCheck.ok ? localCheck.message : undefined;

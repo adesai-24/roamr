@@ -12,6 +12,7 @@
 
 # testing
 /coverage
+/rls-report.json
 
 # next.js
 /.next/

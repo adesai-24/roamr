@@ -66,12 +66,7 @@ describe("parseMapboxResponse", () => {
   });
 });
 
-/**
- * Mapbox speaks GeoJSON, which orders coordinates [longitude, latitude] --
- * backwards from how anyone says it. A swap is silent: the app keeps working
- * and every city ends up somewhere else on the planet. These assertions exist
- * to fail loudly the moment someone flips the destructuring.
- */
+/** Mapbox speaks GeoJSON. */
 describe("coordinate order", () => {
   it("reads center as [lng, lat], not [lat, lng]", () => {
     const [result] = parseMapboxResponse(chicago);
@@ -83,8 +78,7 @@ describe("coordinate order", () => {
   });
 
   it("keeps a positive-longitude place the right way round too", () => {
-    // Tokyo would still be a plausible-looking point if swapped (35/139 both
-    // positive), so this catches a swap that the sign check above would miss.
+    // Tokyo would still be a plausible-looking point if swapped (35/139 both positive).
     const [result] = parseMapboxResponse(tokyo);
     expect(result?.lat).toBe(35.6895);
     expect(result?.lng).toBe(139.6917);
@@ -100,13 +94,7 @@ describe("coordinate order", () => {
     expect(parseMapboxFeature(swapped)).toBeNull();
   });
 
-  /**
-   * The range guard is a backstop, not the defence. Swapping Chicago yields
-   * (-87.6, 41.9), which is a perfectly valid point in the Southern Ocean --
-   * no constraint anywhere would reject it. That is precisely why the exact
-   * value assertions above exist, and why they must not be relaxed into range
-   * checks.
-   */
+  /** The range guard is a backstop, not the defence. */
   it("cannot catch a swap that stays in range, which is why exact values are asserted", () => {
     const swapped = {
       ...chicago.features[0],

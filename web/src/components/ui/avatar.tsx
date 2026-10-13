@@ -8,13 +8,7 @@ const SIZE_STYLES: Record<AvatarSize, string> = {
   lg: "size-16 text-lg",
 };
 
-/**
- * Up to two initials from a display name or username.
- *
- * Usernames are single tokens, so `mann_talati` and `mann.talati` are split on
- * their separators too -- otherwise every username-only account gets a single
- * letter and they all look alike in a feed.
- */
+/** Up to two initials from a display name or username. */
 export function initialsFrom(name: string | null | undefined): string {
   if (!name) return "?";
   const parts = name
@@ -28,7 +22,7 @@ export function initialsFrom(name: string | null | undefined): string {
 }
 
 export interface AvatarProps {
-  /** A ready-to-use image URL. Storage paths must be signed before they get here. */
+  /** A ready-to-use image URL. */
   src?: string | null;
   /** Display name or username; used for the fallback initials and the alt text. */
   name?: string | null;
@@ -49,15 +43,11 @@ export function Avatar({ src, name, size = "md", className }: AvatarProps) {
       title={name ? label : undefined}
     >
       {src ? (
-        /* Avatar sources are short-lived signed Storage URLs. next/image can
-           neither cache them nor match them against a static remotePatterns
-           entry, and the optimiser would be re-fetching an expiring URL. */
+        /** Avatar sources are short-lived signed Storage URLs. */
         // eslint-disable-next-line @next/next/no-img-element
         <img src={src} alt={label} className="size-full object-cover" loading="lazy" />
       ) : (
-        // Initials are a picture of a name, not the name itself. Hiding them
-        // keeps a screen reader from spelling out "MT" next to the display name
-        // that is almost always sitting right beside the avatar.
+        // Initials are a picture of a name, not the name itself.
         <span aria-hidden="true">{initialsFrom(name)}</span>
       )}
     </span>

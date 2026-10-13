@@ -7,15 +7,11 @@ import { APP_HOME_PATH, LOGIN_PATH } from "@/lib/auth/routes";
 import { signOut } from "./actions";
 import { AppNav } from "./app-nav";
 
-// Every page under this layout reads the session, so none of them can be
-// prerendered. Saying so explicitly also keeps `next build` from evaluating the
-// Supabase config in the Docker builder, which only has the public half of it.
+// Every page under this layout reads the session, so none of them can be prerendered.
 export const dynamic = "force-dynamic";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
-  // Middleware has already redirected an anonymous request away from here. This
-  // is the second of the two checks CLAUDE.md asks for: middleware can be
-  // bypassed by a matcher mistake, a server component cannot.
+  // Middleware has already redirected an anonymous request away from here.
   const current = await getCurrentUser();
   if (!current) redirect(LOGIN_PATH);
 

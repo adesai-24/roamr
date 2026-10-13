@@ -5,8 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { findCityByProviderPlaceId, resolveCity } from "../resolve";
 import type { CityRow } from "../types";
 
-// Factories, so the real modules -- and `server-only`, and `next/headers` --
-// are never evaluated in jsdom.
+// Factories.
 vi.mock("@/lib/supabase/admin", () => ({ createAdminClient: vi.fn() }));
 vi.mock("@/lib/supabase/server", () => ({ createClient: vi.fn() }));
 
@@ -37,15 +36,7 @@ interface UpsertCall {
   options: { onConflict?: string; ignoreDuplicates?: boolean } | undefined;
 }
 
-/**
- * Stands in for Postgres closely enough to prove the dedupe: keyed on
- * (provider, provider_place_id) exactly like the unique constraint.
- *
- * It models ON CONFLICT DO NOTHING faithfully, including the part that shapes
- * the calling code -- a conflicting write returns *no row*, which is why
- * resolveCity has to read the existing one back rather than trusting what the
- * write handed it.
- */
+/** Stands in for Postgres closely enough to prove the dedupe. */
 function createFakeDatabase() {
   const rows = new Map<string, CityRow>();
   const upsertCalls: UpsertCall[] = [];
@@ -99,10 +90,6 @@ function createFakeDatabase() {
   return { client: { from }, from, insert, update, upsertCalls, rows, selectFilters };
 }
 
-/**
- * resolveCity writes with the admin client and reads the conflict path back
- * with the request-scoped one, so both point at the same fake database.
- */
 function useDatabase(db: ReturnType<typeof createFakeDatabase>) {
   vi.mocked(createAdminClient).mockReturnValue(db.client as never);
   vi.mocked(createClient).mockResolvedValue(db.client as never);
@@ -136,11 +123,7 @@ describe("resolveCity", () => {
     });
   });
 
-  /**
-   * The whole point of the table. Two people adding Chicago must end up on one
-   * row -- if this ever regresses to insert-if-missing, their collections
-   * silently stop being the same place.
-   */
+  /** The whole point of the table. */
   it("gives two callers adding the same place the same row, and never inserts", async () => {
     const db = createFakeDatabase();
     useDatabase(db);
@@ -158,19 +141,7 @@ describe("resolveCity", () => {
     expect(db.insert).not.toHaveBeenCalled();
   });
 
-  /**
-   * The reason this is ON CONFLICT DO NOTHING rather than DO UPDATE.
-   *
-   * `cities` is the one globally shared table -- row level security contains
-   * per-user damage everywhere else, but a write here lands for everybody. The
-   * coordinates arrive from the browser, so a signed-in user could post a real
-   * place id with wrong coordinates and relocate Chicago for every account. An
-   * upsert that updates would accept that; first-writer-wins does not.
-   *
-   * It also protects the challenge matcher, which falls back to the city
-   * centroid when a Moment has no pin: a poisoned centroid would mis-credit
-   * national parks and get diagnosed as a matcher bug rather than bad data.
-   */
+  /** The reason this is ON CONFLICT DO NOTHING rather than DO UPDATE. */
   it("refuses to let a later caller change an existing city's coordinates", async () => {
     const db = createFakeDatabase();
     useDatabase(db);
@@ -213,10 +184,7 @@ describe("resolveCity", () => {
     expect(db.rows.size).toBe(2);
   });
 
-  /**
-   * Place ids are only unique within the geocoder that issued them, so the
-   * provider has to be part of the key.
-   */
+  /** Place ids are only unique within the geocoder that issued them. */
   it("does not collapse the same id from two different providers", async () => {
     const db = createFakeDatabase();
     useDatabase(db);

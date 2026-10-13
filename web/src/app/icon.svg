@@ -1,18 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="roamr">
-  <!--
-    A map pin: the app is a collection of places you have physically been.
-
-    Drawn on a filled tile rather than as a bare glyph so it stays legible on
-    both light and dark browser chrome. A transparent icon disappears against
-    whichever one it was not designed for, and a favicon gets no media query.
-
-    Sized for 16px first: one shape, one counter, no strokes or fine detail,
-    because anything thinner than roughly 2 units of this viewBox vanishes at
-    tab size.
-  -->
-  <rect width="32" height="32" rx="7" fill="#3f7d4e"/>
+  <!-- Oak pin on dark green. One shape, one counter, legible at 16px. -->
+  <rect width="32" height="32" rx="7" fill="#2f5d47"/>
   <path
     d="M16 6c-4.05 0-7.33 3.28-7.33 7.33C8.67 18.83 16 26 16 26s7.33-7.17 7.33-12.67C23.33 9.28 20.05 6 16 6z"
-    fill="#ffffff"/>
-  <circle cx="16" cy="13.2" r="2.75" fill="#3f7d4e"/>
+    fill="#c08a52"/>
+  <circle cx="16" cy="13.2" r="2.75" fill="#2f5d47"/>
 </svg>

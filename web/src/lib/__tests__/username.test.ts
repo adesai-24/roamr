@@ -98,9 +98,7 @@ describe("validateUsername", () => {
   });
 
   it("does not normalise its input", () => {
-    // Lowercasing inside the validator would make "Mann" quietly legal, and the
-    // check constraint on the column would then reject it at insert time
-    // instead -- which is a 500, not a form error.
+    // Lowercasing inside the validator would make "Mann" quietly legal.
     expect(validateUsername("Mann").ok).toBe(false);
   });
 });
