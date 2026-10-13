@@ -1,0 +1,209 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "roamr-web.fullname" . }}
+  labels:
+    {{- include "roamr-web.labels" . | nindent 4 }}
+  {{- with .Values.commonAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  revisionHistoryLimit: 5
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      # Never dip below the desired capacity during a deploy. Combined with the
+      # readiness probe this means a new pod has to prove it can serve before an
+      # old one is taken away, so a broken image stalls the rollout instead of
+      # taking the site down.
+      maxUnavailable: {{ .Values.updateStrategy.maxUnavailable }}
+      maxSurge: {{ .Values.updateStrategy.maxSurge }}
+  selector:
+    matchLabels:
+      {{- include "roamr-web.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "roamr-web.selectorLabels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      annotations:
+        # Restart pods when the ConfigMap changes. Without this a `helm upgrade`
+        # that only alters config leaves every pod running the old values, since
+        # env vars sourced from a ConfigMap are read once at container start.
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        {{- with .Values.commonAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "roamr-web.serviceAccountName" . }}
+      automountServiceAccountToken: {{ .Values.serviceAccount.automountServiceAccountToken }}
+      {{- with .Values.priorityClassName }}
+      priorityClassName: {{ . }}
+      {{- end }}
+      # Long enough to cover the preStop sleep plus the slowest in-flight
+      # request. Too short and SIGKILL cuts off responses mid-flight.
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      {{- if .Values.topologySpreadConstraints.enabled }}
+      topologySpreadConstraints:
+        {{- range .Values.topologySpreadConstraints.constraints }}
+        - maxSkew: {{ .maxSkew }}
+          topologyKey: {{ .topologyKey }}
+          whenUnsatisfiable: {{ .whenUnsatisfiable }}
+          labelSelector:
+            matchLabels:
+              {{- include "roamr-web.selectorLabels" $ | nindent 14 }}
+        {{- end }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: web
+          image: {{ include "roamr-web.image" . | quote }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.targetPort }}
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: {{ include "roamr-web.fullname" . }}
+            {{- with .Values.config.extraEnvFrom }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- if .Values.secret.existingSecret }}
+          env:
+            # Bypasses row level security, so it is server-only and arrives by
+            # reference from a Secret this chart does not create and never sees.
+            - name: SUPABASE_SERVICE_ROLE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secret.existingSecret | quote }}
+                  key: {{ .Values.secret.serviceRoleKeyKey | quote }}
+            {{- if .Values.secret.mapboxTokenKey }}
+            - name: MAPBOX_ACCESS_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secret.existingSecret | quote }}
+                  key: {{ .Values.secret.mapboxTokenKey | quote }}
+            {{- end }}
+          {{- end }}
+          {{- if .Values.probes.startup.enabled }}
+          # Guards the cold start. Until this passes once, liveness and
+          # readiness are suppressed entirely, so a slow first boot cannot be
+          # mistaken for a crash loop. Points at /healthz, not /readyz: the
+          # question here is "has the process finished booting", not "can it
+          # reach Supabase".
+          startupProbe:
+            httpGet:
+              path: {{ .Values.probes.startup.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.probes.startup.initialDelaySeconds }}
+            periodSeconds: {{ .Values.probes.startup.periodSeconds }}
+            timeoutSeconds: {{ .Values.probes.startup.timeoutSeconds }}
+            failureThreshold: {{ .Values.probes.startup.failureThreshold }}
+          {{- end }}
+          {{- if .Values.probes.liveness.enabled }}
+          # /healthz has NO dependencies by design (see
+          # web/src/app/healthz/route.ts). Never point liveness at /readyz: a
+          # liveness probe that reaches Supabase would restart every healthy pod
+          # in the cluster the moment Supabase blipped, turning a transient
+          # upstream failure into a self-inflicted CrashLoopBackOff.
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.probes.liveness.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.probes.liveness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.probes.liveness.periodSeconds }}
+            timeoutSeconds: {{ .Values.probes.liveness.timeoutSeconds }}
+            failureThreshold: {{ .Values.probes.liveness.failureThreshold }}
+            successThreshold: {{ .Values.probes.liveness.successThreshold }}
+          {{- end }}
+          {{- if .Values.probes.readiness.enabled }}
+          # /readyz checks config and pings Supabase. Failing here removes the
+          # pod from Service endpoints without killing it, so it stops taking
+          # traffic it cannot serve and rejoins on its own once the dependency
+          # recovers. This is where dependency checks belong.
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.probes.readiness.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.probes.readiness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.probes.readiness.periodSeconds }}
+            timeoutSeconds: {{ .Values.probes.readiness.timeoutSeconds }}
+            failureThreshold: {{ .Values.probes.readiness.failureThreshold }}
+            successThreshold: {{ .Values.probes.readiness.successThreshold }}
+          {{- end }}
+          {{- if .Values.lifecycle.preStop.enabled }}
+          lifecycle:
+            preStop:
+              exec:
+                # Endpoint removal and pod termination happen concurrently, not
+                # in order. Sleeping before the server sees SIGTERM gives
+                # kube-proxy and the ingress controller time to stop routing
+                # here, which is the difference between a clean rollout and a
+                # burst of 502s.
+                command:
+                  - /bin/sh
+                  - -c
+                  - sleep {{ .Values.lifecycle.preStop.sleepSeconds }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          volumeMounts:
+            {{- if .Values.writableVolumes.nextCache.enabled }}
+            # readOnlyRootFilesystem is only survivable because of this: Next
+            # writes its ISR and fetch cache here on the first request, and
+            # would otherwise crash on an EROFS.
+            - name: next-cache
+              mountPath: {{ .Values.writableVolumes.nextCache.mountPath }}
+            {{- end }}
+            {{- if .Values.writableVolumes.tmp.enabled }}
+            - name: tmp
+              mountPath: {{ .Values.writableVolumes.tmp.mountPath }}
+            {{- end }}
+            {{- with .Values.extraVolumeMounts }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+      {{- if or .Values.writableVolumes.nextCache.enabled .Values.writableVolumes.tmp.enabled .Values.extraVolumes }}
+      volumes:
+        {{- if .Values.writableVolumes.nextCache.enabled }}
+        - name: next-cache
+          emptyDir:
+            sizeLimit: {{ .Values.writableVolumes.nextCache.sizeLimit }}
+        {{- end }}
+        {{- if .Values.writableVolumes.tmp.enabled }}
+        - name: tmp
+          emptyDir:
+            sizeLimit: {{ .Values.writableVolumes.tmp.sizeLimit }}
+        {{- end }}
+        {{- with .Values.extraVolumes }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- end }}

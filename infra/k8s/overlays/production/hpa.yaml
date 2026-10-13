@@ -1,0 +1,43 @@
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: roamr-web
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    # namePrefix rewrites this reference along with the Deployment's own name.
+    name: roamr-web
+  minReplicas: 3
+  maxReplicas: 12
+  metrics:
+    # Utilisation is a percentage of the CPU *request*, not the limit. With the
+    # production request of 200m and a 70% target, a pod averaging ~140m
+    # triggers a scale-up -- so the request has to be a measured figure, not a
+    # placeholder, or the autoscaler is reacting to the wrong number.
+    #
+    # Memory is deliberately not a scaling signal: Node's heap grows to fill
+    # what it is given and rarely shrinks, so a memory target scales out under
+    # load and then never scales back in.
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+  behavior:
+    # Up fast, down slow. A traffic spike is absorbed immediately; a lull waits
+    # five minutes before shedding capacity, so ordinary variance does not
+    # thrash the deployment.
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+        - type: Percent
+          value: 100
+          periodSeconds: 30
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Percent
+          value: 50
+          periodSeconds: 60
