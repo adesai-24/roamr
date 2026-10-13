@@ -1,0 +1,38 @@
+{{/*
+Non-secret runtime configuration.
+
+Everything here is safe to read from `kubectl get configmap -o yaml`. The anon
+key belongs in this file rather than in a Secret on purpose: it is shipped to
+every browser in the client bundle already, and row level security -- not
+secrecy -- is what protects data behind it. Putting a public value in a Secret
+teaches people that Secrets are where "config that looks sensitive" goes, which
+is exactly how a real credential ends up somewhere it can be read.
+
+Note the build-time caveat in values.yaml: these must match the NEXT_PUBLIC_*
+build args the image was built with. They are set at runtime because
+web/src/lib/env.ts validates the whole server schema out of process.env.
+*/}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "roamr-web.fullname" . }}
+  labels:
+    {{- include "roamr-web.labels" . | nindent 4 }}
+  {{- with .Values.commonAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+data:
+  NODE_ENV: {{ .Values.config.nodeEnv | quote }}
+  # Matches ENV PORT/HOSTNAME in web/Dockerfile. 0.0.0.0 is required: the
+  # standalone server binding to localhost would be unreachable from kubelet's
+  # probes and from the Service.
+  PORT: {{ .Values.service.targetPort | quote }}
+  HOSTNAME: "0.0.0.0"
+  NEXT_TELEMETRY_DISABLED: "1"
+  NEXT_PUBLIC_SUPABASE_URL: {{ .Values.config.supabaseUrl | quote }}
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: {{ .Values.config.supabaseAnonKey | quote }}
+  NEXT_PUBLIC_SITE_URL: {{ .Values.config.siteUrl | quote }}
+  {{- range $key, $value := .Values.config.extraEnv }}
+  {{ $key }}: {{ $value | quote }}
+  {{- end }}

@@ -8,6 +8,7 @@ written. A change to scope or the data model updates `README.md` in the same PR.
 ```
 web/         Next.js App Router (TypeScript, Tailwind v4)
 supabase/    migrations/, seeds/, config.toml
+infra/       Helm chart and k8s manifests (not deployed; roamr ships to Vercel)
 .github/     CI
 ```
 

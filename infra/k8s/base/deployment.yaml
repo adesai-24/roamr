@@ -1,0 +1,157 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: roamr-web
+spec:
+  replicas: 2
+  revisionHistoryLimit: 5
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      # Capacity never dips below the desired replica count during a deploy: a
+      # new pod must pass readiness before an old one is removed, so a broken
+      # image stalls the rollout rather than taking the site down.
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: roamr-web
+      app.kubernetes.io/instance: roamr-web
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: roamr-web
+        app.kubernetes.io/instance: roamr-web
+    spec:
+      serviceAccountName: roamr-web
+      automountServiceAccountToken: false
+      # Must exceed the preStop sleep plus the slowest in-flight request, or
+      # SIGKILL cuts responses off mid-flight.
+      terminationGracePeriodSeconds: 30
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        runAsGroup: 1001
+        fsGroup: 1001
+        seccompProfile:
+          type: RuntimeDefault
+      topologySpreadConstraints:
+        # ScheduleAnyway, not DoNotSchedule: this is a preference, so a
+        # single-zone or single-node cluster still schedules instead of leaving
+        # pods Pending forever.
+        - maxSkew: 1
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: roamr-web
+              app.kubernetes.io/instance: roamr-web
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: roamr-web
+              app.kubernetes.io/instance: roamr-web
+      containers:
+        - name: web
+          # Rewritten by the `images:` transformer in kustomization.yaml.
+          image: roamr-web
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 3000
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: roamr-web
+          env:
+            # Bypasses row level security, so it is server-only and arrives by
+            # reference. The Secret is created out of band and is not in git --
+            # see infra/README.md.
+            - name: SUPABASE_SERVICE_ROLE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: roamr-web
+                  key: SUPABASE_SERVICE_ROLE_KEY
+          # Guards the cold start. Until this passes once, liveness and
+          # readiness are suppressed, so a slow first boot is never mistaken for
+          # a crash loop. Budget: 30 * 2s = 60s.
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 3
+            periodSeconds: 2
+            timeoutSeconds: 3
+            failureThreshold: 30
+          # /healthz has NO dependencies by design (web/src/app/healthz/route.ts).
+          # Never point liveness at /readyz: a liveness probe that reaches
+          # Supabase restarts every healthy pod the moment Supabase blips,
+          # turning a transient upstream failure into a CrashLoopBackOff.
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          # /readyz checks config and pings Supabase. Failing here pulls the pod
+          # out of Service endpoints without killing it, so it stops taking
+          # traffic it cannot serve and rejoins once the dependency recovers.
+          # timeoutSeconds sits above the handler's own 3s Supabase fetch
+          # timeout, so the handler gets to report the failure itself.
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          lifecycle:
+            preStop:
+              exec:
+                # Endpoint removal and pod termination are concurrent, not
+                # ordered. Sleeping before the server sees SIGTERM lets
+                # kube-proxy and the ingress controller stop routing here first,
+                # which is the difference between a clean rollout and a burst of
+                # 502s.
+                command: ["/bin/sh", "-c", "sleep 5"]
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              # No CPU limit: CFS throttling on a latency-sensitive Node process
+              # costs more at p99 than the noisy-neighbour risk it removes.
+              # Memory is not compressible, so that one is capped.
+              memory: 512Mi
+          # Satisfies the `restricted` Pod Security Standard unmodified. UID
+          # 1001 matches the `nextjs` user in web/Dockerfile -- change one
+          # without the other and the container cannot read its own files.
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1001
+            runAsGroup: 1001
+            allowPrivilegeEscalation: false
+            privileged: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            # readOnlyRootFilesystem is only survivable because of these: Next
+            # writes its ISR/fetch cache under .next/cache on the first request
+            # and would otherwise crash on an EROFS.
+            - name: next-cache
+              mountPath: /app/.next/cache
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: next-cache
+          emptyDir:
+            # Capped so a runaway cache cannot exhaust node ephemeral storage.
+            sizeLimit: 512Mi
+        - name: tmp
+          emptyDir:
+            sizeLimit: 64Mi

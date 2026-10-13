@@ -1,0 +1,39 @@
+# Base manifests for the stateless roamr web app.
+#
+# This is a hand-maintained mirror of infra/helm/roamr-web, for teams that would
+# rather not run Helm (or that use Argo CD / Flux with plain Kustomize). It is
+# deliberately NOT `helm template` output checked into git: generated manifests
+# rot silently and nobody edits them, whereas these are meant to be read.
+#
+# When you change a probe, a security context or a resource value in one place,
+# change it in the other. `.github/workflows/infra.yml` validates both, but it
+# cannot tell you they have drifted apart in meaning.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - serviceaccount.yaml
+  - configmap.yaml
+  - service.yaml
+  - deployment.yaml
+  - poddisruptionbudget.yaml
+  - networkpolicy.yaml
+
+labels:
+  - includeSelectors: true
+    pairs:
+      app.kubernetes.io/name: roamr-web
+      app.kubernetes.io/instance: roamr-web
+  - includeSelectors: false
+    pairs:
+      app.kubernetes.io/component: web
+      app.kubernetes.io/part-of: roamr
+      app.kubernetes.io/managed-by: kustomize
+
+# No `images:` transformer here on purpose. The base leaves the container image
+# as the bare placeholder `roamr-web` and each overlay resolves it. Setting a
+# real name here too would mean the overlay's transformer runs against the
+# already-rewritten reference, silently fail to match, and deploy the base's tag
+# to production -- a bug that looks like a successful build.
+#
+# The base is not meant to be applied directly; `kubectl apply -k` an overlay.
