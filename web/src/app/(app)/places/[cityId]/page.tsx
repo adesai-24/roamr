@@ -7,6 +7,7 @@ import { getSession } from "@/lib/auth/profile";
 import { LOGIN_PATH } from "@/lib/auth/routes";
 import { formatCollectionSpan, formatMomentCount, formatMomentDate } from "@/lib/moments/format";
 import { getPlace } from "@/lib/moments/queries";
+import styles from "../../app.module.css";
 
 export const metadata: Metadata = {
   title: "Place · roamr",
@@ -28,7 +29,7 @@ export default async function PlacePage({ params }: { params: Promise<{ cityId: 
   const span = formatCollectionSpan(place.collection.firstMomentAt, place.collection.lastMomentAt);
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className={styles.page}>
       <div className="flex flex-col gap-2">
         <Link href="/places" className="text-muted w-fit text-sm hover:underline">
           ← Places
@@ -48,7 +49,7 @@ export default async function PlacePage({ params }: { params: Promise<{ cityId: 
           </Link>
         </div>
       ) : (
-        <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        <ul className={styles.collectionGrid}>
           {place.moments.map((moment, index) => (
             <li key={moment.id}>
               <Link

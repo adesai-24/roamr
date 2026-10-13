@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 import { redirect } from "next/navigation";
-import { AUTH_CALLBACK_PATH, safeRedirectPath } from "@/lib/auth/routes";
+import { AUTH_CALLBACK_PATH, LOGIN_PATH, safeRedirectPath } from "@/lib/auth/routes";
 import { serverEnv } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
 
@@ -50,6 +50,29 @@ export async function signInWithPassword(
   }
 
   redirect(safeRedirectPath(parsed.data.next));
+}
+
+/** Start Google sign-in and grant the Photos Picker scope in the same consent step. */
+export async function signInWithGoogle(formData: FormData): Promise<never> {
+  const next = safeRedirectPath(readString(formData, "next"));
+  const env = serverEnv();
+  const redirectTo = new URL(AUTH_CALLBACK_PATH, env.NEXT_PUBLIC_SITE_URL);
+  redirectTo.searchParams.set("next", next);
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: {
+      redirectTo: redirectTo.toString(),
+      scopes: "https://www.googleapis.com/auth/photospicker.mediaitems.readonly",
+      queryParams: { access_type: "offline", prompt: "consent" },
+    },
+  });
+
+  if (error || !data.url) {
+    redirect(`${LOGIN_PATH}?error=google_sign_in_failed`);
+  }
+  redirect(data.url);
 }
 
 /** Send a magic link. */

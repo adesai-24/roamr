@@ -1,7 +1,7 @@
 import { beforeEach, expect, it, vi } from "vitest";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { requestMagicLink, signInWithPassword } from "./actions";
+import { requestMagicLink, signInWithGoogle, signInWithPassword } from "./actions";
 
 vi.mock("next/navigation", () => ({
   redirect: vi.fn(() => {
@@ -15,12 +15,14 @@ vi.mock("@/lib/env", () => ({
 
 const passwordLogin = vi.fn();
 const sendLink = vi.fn();
+const googleLogin = vi.fn();
 beforeEach(() => {
   vi.clearAllMocks();
   passwordLogin.mockResolvedValue({ error: null });
   sendLink.mockResolvedValue({ error: null });
+  googleLogin.mockResolvedValue({ data: { url: "https://accounts.google.com/o/oauth2/auth" }, error: null });
   vi.mocked(createClient).mockResolvedValue({
-    auth: { signInWithPassword: passwordLogin, signInWithOtp: sendLink },
+    auth: { signInWithPassword: passwordLogin, signInWithOtp: sendLink, signInWithOAuth: googleLogin },
   } as unknown as Awaited<ReturnType<typeof createClient>>);
 });
 
@@ -85,4 +87,17 @@ it("still sends magic links without requiring a password", async () => {
     options: { emailRedirectTo: "http://localhost:3000/auth/callback?next=%2Ffriends" },
   });
   expect(passwordLogin).not.toHaveBeenCalled();
+});
+
+it("requests Google login with the Photos Picker scope", async () => {
+  await expect(signInWithGoogle(form(""))).rejects.toThrow("redirect");
+  expect(googleLogin).toHaveBeenCalledWith({
+    provider: "google",
+    options: {
+      redirectTo: "http://localhost:3000/auth/callback?next=%2Ffriends",
+      scopes: "https://www.googleapis.com/auth/photospicker.mediaitems.readonly",
+      queryParams: { access_type: "offline", prompt: "consent" },
+    },
+  });
+  expect(redirect).toHaveBeenCalledWith("https://accounts.google.com/o/oauth2/auth");
 });
