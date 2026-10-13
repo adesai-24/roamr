@@ -1,7 +1,7 @@
 # roamr-web Helm chart
 
 Deploys the stateless roamr Next.js app. Postgres, Auth and Storage stay in
-Supabase Cloud, so there is no StatefulSet, no PVC and no database here — see
+Supabase Cloud, so there is no StatefulSet, no PVC and no database here, see
 [`infra/README.md`](../../README.md) for why that split is the whole point.
 
 Nothing in this chart is deployed today; roamr ships to Vercel. It is validated
@@ -37,7 +37,7 @@ Requires Kubernetes >= 1.27.
 
 `next build` inlines `process.env.NEXT_PUBLIC_*` into the client bundle (see the
 `ARG` lines in `web/Dockerfile`). Changing `config.supabaseUrl` here does **not**
-change what the browser talks to — only what the server reads.
+change what the browser talks to: only what the server reads.
 
 They still have to be set at runtime, because `web/src/lib/env.ts` validates the
 full server schema out of `process.env` on first use. So the values here must
@@ -47,7 +47,7 @@ the cluster reports a problem. To point the client somewhere else, rebuild the
 image.
 
 The one genuine secret, `SUPABASE_SERVICE_ROLE_KEY`, is runtime-only and must
-never be a build arg — it bypasses row level security.
+never be a build arg, it bypasses row level security.
 
 ### Liveness vs. readiness
 
@@ -59,7 +59,7 @@ never be a build arg — it bypasses row level security.
 
 Liveness must never reach Supabase. If it did, a Supabase blip would fail
 liveness on every pod simultaneously, kubelet would restart all of them, and the
-restarts would keep failing while the dependency was down — converting a
+restarts would keep failing while the dependency was down, converting a
 recoverable upstream problem into a self-inflicted CrashLoopBackOff. Readiness
 failing is the correct response: pods stop taking traffic they cannot serve,
 stay alive, and rejoin on their own.
@@ -76,7 +76,7 @@ stay alive, and rejoin on their own.
 | `replicaCount` | `2` | Pods when autoscaling is off. Ignored once `autoscaling.enabled` is true, so the HPA is not fought on every upgrade. |
 | `image.repository` | `ghcr.io/adesai-24/roamr-web` | Registry and repository. No image is published yet. |
 | `image.tag` | `""` | Defaults to `.Chart.AppVersion`. Use an immutable tag (a git SHA); with `latest`, a rescheduled pod can silently run a different build than its siblings. |
-| `image.digest` | `""` | `sha256:…`. Wins over `tag` when set — the only way to be certain every replica runs identical code. |
+| `image.digest` | `""` | `sha256:…`. Wins over `tag` when set: the only way to be certain every replica runs identical code. |
 | `image.pullPolicy` | `IfNotPresent` | |
 | `imagePullSecrets` | `[]` | Existing `dockerconfigjson` secrets for private registries. |
 | `nameOverride` | `""` | Overrides the chart-name part of generated names. |
@@ -91,12 +91,12 @@ stay alive, and rejoin on their own.
 | Key | Default | Description |
 |---|---|---|
 | `config.supabaseUrl` | `https://your-project.supabase.co` | Supabase project URL. **Must match the image's build arg.** |
-| `config.supabaseAnonKey` | `""` | Anon key. Public by design — RLS, not secrecy, protects data behind it — so it lives in a ConfigMap, not a Secret. **Must match the image's build arg.** |
+| `config.supabaseAnonKey` | `""` | Anon key. Public by design: RLS, not secrecy, protects data behind it, so it lives in a ConfigMap, not a Secret. **Must match the image's build arg.** |
 | `config.siteUrl` | `https://roamr.example.com` | Public origin. Used to build magic-link redirects, so a wrong value sends people to the wrong host after login. |
 | `config.nodeEnv` | `production` | |
 | `config.extraEnv` | `{}` | Extra plain env vars, as a map. |
 | `config.extraEnvFrom` | `[]` | Extra `envFrom` sources mounted wholesale. |
-| `secret.existingSecret` | `""` | Name of a **pre-existing** Secret holding server-only credentials. The chart never creates one: values files reach git, `helm get values` output and CI logs. Empty renders a Deployment without the service role key — allowed only so CI can render without a cluster. |
+| `secret.existingSecret` | `""` | Name of a **pre-existing** Secret holding server-only credentials. The chart never creates one: values files reach git, `helm get values` output and CI logs. Empty renders a Deployment without the service role key, allowed only so CI can render without a cluster. |
 | `secret.serviceRoleKeyKey` | `SUPABASE_SERVICE_ROLE_KEY` | Key within that Secret. Bypasses RLS; server-only, never a build arg. |
 | `secret.mapboxTokenKey` | `""` | Key within that Secret for `MAPBOX_ACCESS_TOKEN`. Empty omits the variable. |
 
@@ -119,7 +119,7 @@ stay alive, and rejoin on their own.
 | Key | Default | Description |
 |---|---|---|
 | `probes.liveness.enabled` | `true` | |
-| `probes.liveness.path` | `/healthz` | Keep dependency-free — see above. |
+| `probes.liveness.path` | `/healthz` | Keep dependency-free: see above. |
 | `probes.liveness.periodSeconds` / `timeoutSeconds` / `failureThreshold` / `successThreshold` / `initialDelaySeconds` | `10` / `3` / `3` / `1` / `0` | |
 | `probes.readiness.enabled` | `true` | |
 | `probes.readiness.path` | `/readyz` | Checks config and pings Supabase. |
@@ -169,7 +169,7 @@ stay alive, and rejoin on their own.
 | `writableVolumes.nextCache.mountPath` | `/app/.next/cache` | |
 | `writableVolumes.nextCache.sizeLimit` | `512Mi` | Capped so a runaway cache cannot exhaust node ephemeral storage. |
 | `writableVolumes.tmp.*` | `/tmp`, `64Mi` | Node and sharp both write here. |
-| `networkPolicy.enabled` | `false` | Default-deny plus explicit allowances. **Inert on a CNI that does not enforce NetworkPolicy** — the API server accepts it with no warning either way. |
+| `networkPolicy.enabled` | `false` | Default-deny plus explicit allowances. **Inert on a CNI that does not enforce NetworkPolicy**. The API server accepts it with no warning either way. |
 | `networkPolicy.ingressFromNamespaceSelectors` | `ingress-nginx` | Namespaces allowed to reach the container port. |
 | `networkPolicy.egress.dns` | `true` | Without it nothing resolves, and the failure looks like a Supabase outage. |
 | `networkPolicy.egress.https` | `true` | Supabase Cloud and Mapbox are off-cluster over 443. Excludes RFC1918 and `169.254.0.0/16`, so an SSRF bug cannot reach cloud instance metadata and mint node IAM credentials. |
@@ -193,5 +193,5 @@ helm template roamr infra/helm/roamr-web \
 ```
 
 `ci/full-values.yaml` switches on Ingress, the HPA, the NetworkPolicy and the
-Secret reference — without it those four templates are never rendered at all.
+Secret reference: without it those four templates are never rendered at all.
 It is excluded from the packaged chart by `.helmignore`.

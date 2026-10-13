@@ -12,8 +12,9 @@ Watch the rollout:
 Reachable at:
 {{- range .Values.ingress.hosts }}
 {{- $scheme := ternary "https" "http" (gt (len $.Values.ingress.tls) 0) }}
+{{- $host := .host }}
 {{- range .paths }}
-  {{ $scheme }}://{{ .host }}{{ .path }}
+  {{ $scheme }}://{{ $host }}{{ .path }}
 {{- end }}
 {{- end }}
 {{- else }}

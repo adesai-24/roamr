@@ -49,7 +49,7 @@ jobs:
         run: |
           curl -sSfL \
             "https://github.com/yannh/kubeconform/releases/download/v0.6.7/kubeconform-linux-amd64.tar.gz" \
-            | tar -xz -C /usr/local/bin kubeconform
+            | sudo tar -xz -C /usr/local/bin kubeconform
           kubeconform -v
 
       - name: helm lint (defaults)
@@ -90,8 +90,14 @@ jobs:
       # working would be invisible otherwise.
       - name: Single-replica PodDisruptionBudget is rejected
         run: |
-          if helm template roamr "$CHART" --set replicaCount=1 > /dev/null 2>&1; then
+          # Match the message, not just a non-zero exit, so an unrelated render error cannot pass.
+          if out=$(helm template roamr "$CHART" --set replicaCount=1 2>&1); then
             echo "::error::Expected the chart to reject a PDB with replicaCount=1, but it rendered."
+            exit 1
+          fi
+          if ! grep -q "requires at least 2 replicas" <<<"$out"; then
+            echo "::error::Chart failed for the wrong reason:"
+            echo "$out"
             exit 1
           fi
           echo "Guard fired as expected."
@@ -146,10 +152,10 @@ jobs:
         run: |
           curl -sSfL \
             "https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv5.5.0/kustomize_v5.5.0_linux_amd64.tar.gz" \
-            | tar -xz -C /usr/local/bin kustomize
+            | sudo tar -xz -C /usr/local/bin kustomize
           curl -sSfL \
             "https://github.com/yannh/kubeconform/releases/download/v0.6.7/kubeconform-linux-amd64.tar.gz" \
-            | tar -xz -C /usr/local/bin kubeconform
+            | sudo tar -xz -C /usr/local/bin kubeconform
           kustomize version
           kubeconform -v
 
@@ -177,3 +183,17 @@ jobs:
             ghcr.io/adesai-24/roamr-web:*|ghcr.io/adesai-24/roamr-web@sha256:*) ;;
             *) echo "::error::Overlay did not resolve the image placeholder; got '$image'"; exit 1 ;;
           esac
+          # Warn, not fail: the committed digest is a stand-in until images are published.
+          case "$image" in
+            *@sha256:0000000000000000000000000000000000000000000000000000000000000000)
+              echo "::warning::${{ matrix.overlay }} still pins the all-zeros placeholder digest; replace it before the first deploy." ;;
+          esac
+
+      # An empty anon key passes kubeconform but fails serverEnv() (min(1)), so
+      # pods would start and /readyz would stay 503.
+      - name: Overlay sets a non-empty anon key (${{ matrix.overlay }})
+        run: |
+          key=$(kustomize build "infra/k8s/overlays/${{ matrix.overlay }}" \
+            | yq 'select(.kind == "ConfigMap") | .data.NEXT_PUBLIC_SUPABASE_ANON_KEY' | grep -v '^---$' | grep -v null | head -1)
+          [ -n "$key" ] || { echo "::error::Rendered NEXT_PUBLIC_SUPABASE_ANON_KEY is empty"; exit 1; }
+          echo "anon key is set (${#key} chars)"

@@ -9,6 +9,7 @@ affects scope or the data model, update `README.md` in the same PR.
 ```
 web/         Next.js App Router app (TypeScript, Tailwind v4)
 supabase/    The database contract: migrations/, seeds/, config.toml
+infra/       Helm chart and k8s manifests (not deployed; roamr ships to Vercel)
 .github/     CI
 ```
 

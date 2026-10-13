@@ -23,5 +23,7 @@ data:
   HOSTNAME: "0.0.0.0"
   NEXT_TELEMETRY_DISABLED: "1"
   NEXT_PUBLIC_SUPABASE_URL: "https://your-project.supabase.co"
+  # Empty on purpose: env.ts rejects it, so an overlay that forgets to patch it
+  # fails loudly instead of deploying with a key that looks real.
   NEXT_PUBLIC_SUPABASE_ANON_KEY: ""
   NEXT_PUBLIC_SITE_URL: "https://roamr.example.com"

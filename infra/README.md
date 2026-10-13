@@ -6,7 +6,7 @@ Cloud as the data layer, and deploying is still a `git push`. This is the
 is a config change rather than a rewrite.
 
 That distinction is the whole reason the directory exists. Infrastructure code
-that has never been rendered, validated or read is not a migration plan — it is
+that has never been rendered, validated or read is not a migration plan: it is
 a guess that will be discovered to be wrong at the worst possible moment. So
 everything here is linted, templated and schema-validated on every change by
 [`.github/workflows/infra.yml`](../.github/workflows/infra.yml), even though no
@@ -26,7 +26,7 @@ plain manifests, and because a second hand-written expression of the same
 deployment catches assumptions the chart's defaults quietly bury.
 
 They are hand-maintained mirrors, not generated output. Change a probe, a
-security context or a resource value in one and change it in the other — CI
+security context or a resource value in one and change it in the other. CI
 validates both but cannot tell you they have drifted apart in meaning.
 
 ## What is deliberately NOT here
@@ -39,18 +39,18 @@ No cloud account has been chosen. The stack is Supabase + Vercel, and neither
 AWS nor GCP is provisioned or being provisioned. Writing several hundred lines
 of EKS/GKE/VPC/IAM code today would produce something nobody can apply, nobody
 can review against a real account, and CI cannot test beyond `terraform
-validate` — which proves only that the HCL parses. That is worse than an empty
+validate`, which proves only that the HCL parses. That is worse than an empty
 directory: it looks like working infrastructure, it accumulates drift against
 provider API changes, and the first person to run `terraform apply` inherits
 every wrong assumption at once.
 
 The chart is cloud-agnostic on purpose. It needs a Kubernetes API, an ingress
-controller and a registry — nothing provider-specific. The cloud-specific layer
+controller and a registry: nothing provider-specific. The cloud-specific layer
 gets written when a provider is actually picked, against an account that exists,
 and it will be a smaller diff than the guesswork would have been.
 
-(`CLAUDE.md` lists `infra/` as "Helm chart, k8s manifests, Terraform" — the
-Terraform part is this deferral, not a missing file.)
+(`CLAUDE.md` lists `infra/` as the Helm chart and k8s manifests only; Terraform
+is this deferral, not a missing file.)
 
 ### Anything stateful
 
@@ -61,7 +61,7 @@ Next.js app is containerized and orchestrated, and that split is the point:
 the tier that scales horizontally, restarts freely and can be killed at any
 moment is separated from the tier that holds the data and needs backups,
 point-in-time recovery, connection pooling and careful upgrades. Self-hosting
-the Supabase stack means owning all of that — for a friends-first app whose
+the Supabase stack means owning all of that, for a friends-first app whose
 entire operational budget is one person's spare evenings, it is the wrong
 trade.
 
@@ -71,14 +71,14 @@ off-cluster, and the manifests say so.
 
 ## Why the app is already cluster-ready
 
-None of this required changes to the app in this PR — it was built this way:
+None of this required changes to the app in this PR. It was built this way:
 
 | Piece | Where |
 |---|---|
-| Standalone server bundle (no `node_modules` at runtime) | `web/next.config.ts` — `output: "standalone"` |
+| Standalone server bundle (no `node_modules` at runtime) | `web/next.config.ts`: `output: "standalone"` |
 | Non-root multi-stage image, UID 1001 | `web/Dockerfile` |
-| `/healthz` — liveness, zero dependencies | `web/src/app/healthz/route.ts` |
-| `/readyz` — readiness, checks Supabase | `web/src/app/readyz/route.ts` |
+| `/healthz`: liveness, zero dependencies | `web/src/app/healthz/route.ts` |
+| `/readyz`: readiness, checks Supabase | `web/src/app/readyz/route.ts` |
 | 12-factor config, validated at startup | `web/src/lib/env.ts` |
 
 ## Cutover checklist
@@ -90,7 +90,12 @@ of it is done.
       GitHub) and give the cluster pull access. Update `image.repository`.
 - [ ] **Publish images.** `.github/workflows/ci.yml` builds the image but does
       not push it. Add a push step tagged with the git SHA, and prefer a digest
-      in production — a tag can be moved, a digest cannot.
+      in production: a tag can be moved, a digest cannot.
+- [ ] **Replace the overlay placeholders before the first deploy.** The
+      production overlay pins an all-zeros digest, the staging overlay pins a
+      made-up tag, and both set placeholder Supabase URLs and anon keys. CI
+      only warns about the zero digest, so a green build does not mean the
+      image exists.
 - [ ] **Decide the `NEXT_PUBLIC_*` build matrix.** These are baked into the
       client bundle at build time, so staging and production need *separate
       image builds*, not just separate ConfigMaps. This is the single most
@@ -103,7 +108,7 @@ of it is done.
       cert-manager with a real ClusterIssuer, then set `ingress.enabled=true`
       and the `tls` block.
 - [ ] **DNS.** Point the record at the ingress load balancer. Set
-      `config.siteUrl` to match — magic-link redirects break loudly otherwise.
+      `config.siteUrl` to match: magic-link redirects break loudly otherwise.
 - [ ] **Supabase allowlists.** Add the new origin to the Supabase project's
       redirect URL allowlist and to any Mapbox token origin restriction.
 - [ ] **Metrics server.** The HPA scales on CPU and needs `metrics-server`

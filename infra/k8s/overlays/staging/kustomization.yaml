@@ -38,6 +38,10 @@ patches:
       - op: replace
         path: /data/NEXT_PUBLIC_SUPABASE_URL
         value: "https://staging-project.supabase.co"
+      # Placeholder like the URL above; non-empty so env.ts passes. Replace it.
+      - op: replace
+        path: /data/NEXT_PUBLIC_SUPABASE_ANON_KEY
+        value: "replace-with-staging-anon-key"
       - op: replace
         path: /data/NEXT_PUBLIC_SITE_URL
         value: "https://staging.roamr.example.com"
