@@ -238,6 +238,10 @@
   background: transparent;
   padding: 28px 0 0;
 }
+.content .pageHeader + :global([data-slot="card"]) {
+  border-top: 0;
+  padding-top: 0;
+}
 .peopleList {
   border-block: 1px solid var(--border);
 }
