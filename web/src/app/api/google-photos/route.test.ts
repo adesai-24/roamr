@@ -39,6 +39,9 @@ it("rejects a foreign or missing origin before touching Google", async () => {
     403,
   );
   expect((await call({ operation: "create" }, { origin: null })).status).toBe(403);
+  expect((await call({ operation: "create" }, { origin: "http://localhost:3001" })).status).toBe(
+    403,
+  );
   expect(upstream).not.toHaveBeenCalled();
 });
 
@@ -62,6 +65,14 @@ it("forwards a valid operation to the Picker API with the caller's token", async
   expect(res.status).toBe(200);
   expect(upstream.mock.calls[0]![0]).toBe("https://photospicker.googleapis.com/v1/sessions/s1");
   expect(upstream.mock.calls[0]![1].headers.Authorization).toBe("Bearer token-123");
+});
+
+it("percent-encodes the session id in the Picker path", async () => {
+  upstream.mockResolvedValueOnce(Response.json({}));
+  await call({ operation: "poll", sessionId: "a/b?c#d" });
+  expect(upstream.mock.calls[0]![0]).toBe(
+    "https://photospicker.googleapis.com/v1/sessions/a%2Fb%3Fc%23d",
+  );
 });
 
 it("refuses to fetch a photo from a host outside googleusercontent.com", async () => {
