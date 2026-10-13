@@ -52,7 +52,7 @@ export async function signInWithPassword(
   redirect(safeRedirectPath(parsed.data.next));
 }
 
-/** Start Google sign-in and grant the Photos Picker scope in the same consent step. */
+/** Sign-in only; the Photos Picker asks for its own consent when someone imports. */
 export async function signInWithGoogle(formData: FormData): Promise<never> {
   const next = safeRedirectPath(readString(formData, "next"));
   const env = serverEnv();
@@ -62,11 +62,7 @@ export async function signInWithGoogle(formData: FormData): Promise<never> {
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
-    options: {
-      redirectTo: redirectTo.toString(),
-      scopes: "https://www.googleapis.com/auth/photospicker.mediaitems.readonly",
-      queryParams: { access_type: "offline", prompt: "consent" },
-    },
+    options: { redirectTo: redirectTo.toString() },
   });
 
   if (error || !data.url) {

@@ -96,15 +96,11 @@ it("still sends magic links without requiring a password", async () => {
   expect(passwordLogin).not.toHaveBeenCalled();
 });
 
-it("requests Google login with the Photos Picker scope", async () => {
+it("requests Google login without the Photos scope or offline access", async () => {
   await expect(signInWithGoogle(form(""))).rejects.toThrow("redirect");
   expect(googleLogin).toHaveBeenCalledWith({
     provider: "google",
-    options: {
-      redirectTo: "http://localhost:3000/auth/callback?next=%2Ffriends",
-      scopes: "https://www.googleapis.com/auth/photospicker.mediaitems.readonly",
-      queryParams: { access_type: "offline", prompt: "consent" },
-    },
+    options: { redirectTo: "http://localhost:3000/auth/callback?next=%2Ffriends" },
   });
   expect(redirect).toHaveBeenCalledWith("https://accounts.google.com/o/oauth2/auth");
 });

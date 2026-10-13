@@ -27,3 +27,5 @@ data:
   # fails loudly instead of deploying with a key that looks real.
   NEXT_PUBLIC_SUPABASE_ANON_KEY: ""
   NEXT_PUBLIC_SITE_URL: "https://roamr.example.com"
+  # Optional: empty hides the "Choose from Google Photos" button.
+  NEXT_PUBLIC_GOOGLE_PHOTOS_CLIENT_ID: ""
