@@ -1,0 +1,474 @@
+.landing {
+  --paper: var(--background);
+  --ink: var(--foreground);
+  --white: var(--accent-foreground);
+  background: var(--paper);
+  color: var(--ink);
+}
+.landing a {
+  text-decoration: none;
+}
+.landing a:focus-visible {
+  outline: 3px solid var(--oak);
+  outline-offset: 6px;
+}
+.skip {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 5;
+  padding: 12px 20px;
+  background: var(--paper);
+  color: var(--ink);
+  transform: translateY(-150%);
+}
+.skip:focus {
+  transform: translateY(0);
+}
+.hero {
+  min-height: 760px;
+  height: 100svh;
+  max-height: 1100px;
+  position: relative;
+  isolation: isolate;
+  color: white;
+}
+.landscape {
+  object-fit: cover;
+  object-position: center 60%;
+  z-index: -3;
+}
+.shade {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  background:
+    linear-gradient(90deg, rgb(9 25 19 / 68%), rgb(9 25 19 / 15%) 75%),
+    linear-gradient(0deg, rgb(9 25 19 / 55%), transparent 28%, transparent 80%, rgb(9 25 19 / 30%));
+}
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 27px 5%;
+}
+.logo {
+  display: inline-flex;
+  gap: 5px;
+  align-items: center;
+  font-size: 31px;
+  font-weight: 800;
+  letter-spacing: -2px;
+}
+.logo span {
+  font-size: 29px;
+  margin-left: 4px;
+}
+.header nav {
+  display: flex;
+  align-items: center;
+  gap: 42px;
+  font-size: 13px;
+}
+.signin {
+  padding: 12px 22px;
+  border: 1px solid rgb(255 255 255 / 60%);
+  border-radius: 30px;
+  display: flex;
+  gap: 25px;
+  transition: background 180ms;
+}
+.signin:hover {
+  background: rgb(255 255 255 / 15%);
+}
+.aboutLink {
+  padding: 12px 0;
+}
+.aboutLink:hover {
+  text-decoration: underline;
+  text-underline-offset: 6px;
+}
+.heroContent {
+  position: absolute;
+  top: 49%;
+  transform: translateY(-50%);
+  left: 9%;
+  animation: arrive 900ms ease-out both;
+}
+.eyebrow {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 2.5px;
+}
+.wordmark {
+  display: flex;
+  align-items: flex-start;
+  font-size: clamp(110px, 13.5vw, 200px);
+  line-height: 1.05;
+  font-weight: 800;
+  letter-spacing: -0.085em;
+  margin: 1px 0 15px -9px;
+}
+.wordmark span {
+  font-size: 0.37em;
+  line-height: 1.3;
+  letter-spacing: 0;
+  padding: 16px 0 0 15px;
+  font-weight: 400;
+}
+.heroContent h2 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(32px, 3.4vw, 49px);
+  line-height: 1.06;
+  letter-spacing: -1.3px;
+  font-weight: 400;
+}
+.intro {
+  font-size: 15px;
+  line-height: 1.7;
+  margin: 22px 0 26px;
+  color: rgb(255 255 255 / 90%);
+}
+.primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 43px;
+  background: var(--paper);
+  color: var(--ink);
+  padding: 17px 24px;
+  border-radius: 35px;
+  font-size: 13px;
+  font-weight: 600;
+  transition:
+    transform 180ms,
+    box-shadow 180ms;
+}
+.primary span {
+  font-size: 19px;
+  line-height: 1;
+  transition: transform 180ms;
+}
+.primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 20px rgb(0 0 0 / 12%);
+}
+.primary:hover span {
+  transform: translate(2px, -2px);
+}
+.note {
+  font-size: 10px;
+  margin-top: 13px;
+  color: rgb(255 255 255 / 80%);
+}
+.heroBottom {
+  position: absolute;
+  bottom: 28px;
+  left: 5%;
+  right: 5%;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+.heroBottom a {
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  padding: 12px 0;
+}
+.heroBottom a span {
+  display: inline-block;
+  margin-left: 20px;
+  font-size: 19px;
+}
+.location {
+  font-size: 9px;
+  text-align: right;
+  letter-spacing: 1px;
+  line-height: 1.9;
+}
+.location b {
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.3px;
+}
+.about {
+  max-width: 1440px;
+  margin: auto;
+  padding: 70px 9% 100px;
+  scroll-margin-top: 24px;
+}
+.sectionLabel {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 9px;
+  letter-spacing: 1.8px;
+}
+.sectionLabel > span:last-child {
+  font-size: 30px;
+  color: var(--oak);
+}
+.aboutHeading {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 12%;
+  align-items: end;
+  margin: 35px 0 60px;
+}
+.about h2,
+.join h2 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(36px, 4.2vw, 61px);
+  line-height: 1.08;
+  letter-spacing: -2px;
+  font-weight: 400;
+}
+.about h2 em,
+.join h2 em {
+  font-weight: 400;
+}
+.aboutHeading p {
+  font-size: 14px;
+  line-height: 1.85;
+  color: var(--muted);
+  max-width: 360px;
+}
+.details {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 11%;
+  align-items: center;
+}
+.photo {
+  margin: 0;
+  transform: rotate(-2deg);
+  background: var(--surface);
+  padding: 12px 12px 0;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 6%);
+}
+.photo img {
+  width: 100%;
+  height: 390px;
+  object-fit: cover;
+}
+.photo figcaption {
+  display: flex;
+  justify-content: space-between;
+  padding: 18px 7px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 13px;
+  font-style: italic;
+}
+.features article {
+  display: flex;
+  gap: 20px;
+  border-bottom: 1px solid var(--border);
+  padding: 27px 0;
+}
+.features article:first-child {
+  padding-top: 0;
+}
+.number {
+  padding-top: 4px;
+  font-size: 10px;
+  color: var(--oak);
+}
+.features h3 {
+  font-size: 18px;
+  letter-spacing: -0.5px;
+  font-weight: 500;
+  margin-bottom: 10px;
+}
+.features article p {
+  font-size: 13px;
+  line-height: 1.8;
+  color: var(--muted);
+}
+.marginNote {
+  margin-top: 26px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 14px;
+  font-style: italic;
+  color: var(--muted);
+}
+.join {
+  background: var(--accent);
+  color: var(--accent-foreground);
+  text-align: center;
+  padding: 60px 24px 75px;
+}
+.joinFlower {
+  display: block;
+  font-size: 47px;
+  line-height: 1;
+  margin-bottom: 27px;
+}
+.join h2 {
+  margin: 22px 0 30px;
+}
+.join > p:last-child {
+  font-size: 11px;
+  margin-top: 17px;
+}
+.footer {
+  padding: 34px 5%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+.footer p {
+  font-size: 11px;
+  color: var(--muted);
+}
+.footer > span {
+  font-size: 8px;
+  letter-spacing: 1.5px;
+}
+@keyframes arrive {
+  from {
+    opacity: 0;
+    translate: 0 14px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+@media (max-width: 700px) {
+  .hero {
+    min-height: 650px;
+    max-height: 900px;
+  }
+  .header {
+    padding: 22px 6%;
+  }
+  .header nav {
+    gap: 0;
+  }
+  .aboutLink {
+    display: none;
+  }
+  .logo {
+    font-size: 27px;
+  }
+  .logo span {
+    font-size: 25px;
+  }
+  .signin {
+    padding: 10px 17px;
+    gap: 18px;
+  }
+  .heroContent {
+    left: 8%;
+    top: 48%;
+  }
+  .wordmark {
+    font-size: clamp(106px, 25vw, 170px);
+    margin-left: -5px;
+    margin-bottom: 20px;
+  }
+  .wordmark span {
+    padding-left: 9px;
+    padding-top: 10px;
+  }
+  .heroContent h2 {
+    font-size: 38px;
+  }
+  .eyebrow {
+    font-size: 8px;
+    letter-spacing: 1.7px;
+  }
+  .intro {
+    font-size: 14px;
+    margin: 21px 0;
+  }
+  .heroBottom {
+    left: 8%;
+    right: 8%;
+    bottom: 22px;
+  }
+  .heroBottom a {
+    font-size: 7px;
+    max-width: 175px;
+    line-height: 1.8;
+  }
+  .heroBottom a span {
+    margin-left: 10px;
+  }
+  .location {
+    font-size: 7px;
+  }
+  .location b {
+    font-size: 9px;
+  }
+  .landscape {
+    object-position: 58% center;
+  }
+  .about {
+    padding: 45px 8% 60px;
+  }
+  .sectionLabel {
+    font-size: 8px;
+    letter-spacing: 1px;
+  }
+  .aboutHeading,
+  .details {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+  .aboutHeading {
+    margin: 27px 0 40px;
+  }
+  .about h2,
+  .join h2 {
+    font-size: 43px;
+  }
+  .aboutHeading p {
+    max-width: none;
+  }
+  .photo img {
+    height: 340px;
+  }
+  .features {
+    margin-top: 25px;
+  }
+  .join {
+    padding: 50px 8% 60px;
+  }
+  .footer {
+    flex-wrap: wrap;
+    padding: 26px 8%;
+    gap: 18px;
+  }
+  .footer p {
+    width: 100%;
+    order: 3;
+  }
+  .footer > span {
+    margin-left: auto;
+  }
+}
+@media (max-height: 740px) and (min-width: 701px) {
+  .hero {
+    min-height: 640px;
+  }
+  .wordmark {
+    font-size: 125px;
+  }
+  .heroContent h2 {
+    font-size: 36px;
+  }
+  .intro {
+    margin: 16px 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .heroContent {
+    animation: none;
+  }
+  .landing a,
+  .primary span {
+    transition: none;
+  }
+}
