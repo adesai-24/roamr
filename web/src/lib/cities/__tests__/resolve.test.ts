@@ -2,7 +2,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { GeocodeResult } from "@/lib/geocoding/types";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-import { findCityByProviderPlaceId, resolveCity } from "../resolve";
+import { fakeGeocodingProvider } from "@/lib/geocoding/fake";
+import { findCityByProviderPlaceId, resolveCity, resolveVerifiedCity } from "../resolve";
 import type { CityRow } from "../types";
 
 // Factories.
@@ -249,5 +250,28 @@ describe("findCityByProviderPlaceId", () => {
     vi.mocked(createClient).mockResolvedValue(db.client as never);
 
     expect(await findCityByProviderPlaceId("place.unknown", "mapbox")).toBeNull();
+  });
+});
+
+describe("resolveVerifiedCity", () => {
+  it("stores the geocoder's copy, not the caller's, for a real place id", async () => {
+    const db = createFakeDatabase();
+    useDatabase(db);
+    const [real] = await fakeGeocodingProvider.searchCities("chicago");
+
+    const city = await resolveVerifiedCity({ ...real!, name: "Hacked", lat: 0, lng: 0 });
+
+    expect(city?.name).toBe(real!.name);
+    expect(city?.lat).toBe(real!.lat);
+  });
+
+  it("rejects a place id the geocoder never issued", async () => {
+    const db = createFakeDatabase();
+    useDatabase(db);
+
+    const city = await resolveVerifiedCity({ ...CHICAGO, providerPlaceId: "place.forged" });
+
+    expect(city).toBeNull();
+    expect(db.upsertCalls).toHaveLength(0);
   });
 });

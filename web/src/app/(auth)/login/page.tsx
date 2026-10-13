@@ -12,6 +12,7 @@ const CALLBACK_ERRORS: Record<string, string> = {
   link_invalid: "That sign-in link is not valid any more. Request a new one.",
   link_missing_code: "That link was missing its sign-in code. Request a new one.",
   exchange_failed: "We could not finish signing you in. Request a new link.",
+  google_sign_in_failed: "We could not start Google sign-in. Try again or use email.",
 };
 
 const GENERIC_ERROR = "Something went wrong signing you in. Try again.";
@@ -32,8 +33,8 @@ export default async function LoginPage({
       <div className="flex flex-col gap-2">
         <h1 className="text-2xl font-semibold tracking-tight">Sign in</h1>
         <p className="text-muted text-sm">
-          Brag about touching grass to only your friends. Enter your email and we will send you a
-          link.
+          Brag about touching grass to only your friends. Sign in with Google, an email link, or
+          your password.
         </p>
       </div>
 

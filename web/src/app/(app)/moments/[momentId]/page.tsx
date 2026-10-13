@@ -2,11 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { MomentPhoto } from "@/components/moments/moment-photo";
-import { getCurrentUser } from "@/lib/auth/profile";
+import { getSession } from "@/lib/auth/profile";
 import { LOGIN_PATH } from "@/lib/auth/routes";
 import { formatMomentDate } from "@/lib/moments/format";
 import { getMoment } from "@/lib/moments/queries";
 import { MomentEditor } from "./moment-editor";
+import styles from "../../app.module.css";
 
 export const metadata: Metadata = {
   title: "Moment · roamr",
@@ -17,20 +18,20 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export default async function MomentPage({ params }: { params: Promise<{ momentId: string }> }) {
   const { momentId } = await params;
 
-  const current = await getCurrentUser();
-  if (!current) redirect(LOGIN_PATH);
+  const session = await getSession();
+  if (!session) redirect(LOGIN_PATH);
 
   if (!UUID.test(momentId)) notFound();
 
   // A moment nobody has shared with the caller comes back as null from the select policy.
-  const detail = await getMoment(current.id, momentId);
+  const detail = await getMoment(session.id, momentId);
   if (!detail) notFound();
 
   const { moment, city, isOwner } = detail;
   const takenAt = formatMomentDate(moment.takenAt);
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className={`${styles.page} ${styles.narrow}`}>
       <div className="flex flex-col gap-2">
         <Link href={`/places/${city.id}`} className="text-muted w-fit text-sm hover:underline">
           ← {city.name}
@@ -44,7 +45,7 @@ export default async function MomentPage({ params }: { params: Promise<{ momentI
         alt={moment.caption ?? `A moment from ${city.name}`}
         width={moment.width}
         height={moment.height}
-        className="rounded-card"
+        className={styles.momentImage}
         eager
       />
 

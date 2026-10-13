@@ -1,7 +1,8 @@
 "use server";
 
 import { z } from "zod";
-import { AUTH_CALLBACK_PATH, safeRedirectPath } from "@/lib/auth/routes";
+import { redirect } from "next/navigation";
+import { AUTH_CALLBACK_PATH, LOGIN_PATH, safeRedirectPath } from "@/lib/auth/routes";
 import { serverEnv } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
 
@@ -12,6 +13,63 @@ const loginSchema = z.object({
   email: z.string().trim().toLowerCase().pipe(z.email("Enter a valid email address.")),
   next: z.string().optional(),
 });
+
+const passwordSchema = loginSchema.extend({
+  password: z.string().min(1, "Enter your password."),
+});
+
+export async function signInWithPassword(
+  _previous: LoginState,
+  formData: FormData,
+): Promise<LoginState> {
+  const parsed = passwordSchema.safeParse({
+    email: readString(formData, "email"),
+    password: readString(formData, "password"),
+    next: readString(formData, "next") || undefined,
+  });
+  if (!parsed.success) {
+    return {
+      status: "error",
+      message: parsed.error.issues[0]?.message ?? "Check your sign-in details.",
+    };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.signInWithPassword({
+    email: parsed.data.email,
+    password: parsed.data.password,
+  });
+  if (error) {
+    return {
+      status: "error",
+      message:
+        error.status === 429
+          ? "Too many sign-in attempts. Wait a little, then try again."
+          : "Could not sign in. Check your email and password, or use an email link.",
+    };
+  }
+
+  redirect(safeRedirectPath(parsed.data.next));
+}
+
+/** Sign-in only; the Photos Picker asks for its own consent when someone imports. */
+export async function signInWithGoogle(formData: FormData): Promise<never> {
+  const next = safeRedirectPath(readString(formData, "next"));
+  const env = serverEnv();
+  const redirectTo = new URL(AUTH_CALLBACK_PATH, env.NEXT_PUBLIC_SITE_URL);
+  redirectTo.searchParams.set("next", next);
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: { redirectTo: redirectTo.toString() },
+  });
+
+  if (error || !data.url) {
+    redirect(`${LOGIN_PATH}?error=google_sign_in_failed`);
+  }
+  redirect(data.url);
+}
 
 /** Send a magic link. */
 export async function requestMagicLink(

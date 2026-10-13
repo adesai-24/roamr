@@ -1,7 +1,6 @@
 import "server-only";
 
 import { createAdminClient } from "@/lib/supabase/admin";
-import { createClient } from "@/lib/supabase/server";
 import { MOMENT_PHOTO_BUCKET } from "./photo-path";
 
 /** The only way a photo becomes readable. */
@@ -9,7 +8,7 @@ import { MOMENT_PHOTO_BUCKET } from "./photo-path";
 /** Long enough for a slow connection to finish loading a grid of photos. */
 export const PHOTO_URL_TTL_SECONDS = 300;
 
-/** Signs paths that a policy has *already* cleared. */
+/** Signs paths that a policy has *already* cleared: each came from a row read under RLS. */
 async function signPaths(paths: readonly string[]): Promise<Map<string, string>> {
   const signed = new Map<string, string>();
   const unique = [...new Set(paths)];
@@ -33,56 +32,31 @@ async function signPaths(paths: readonly string[]): Promise<Map<string, string>>
   return signed;
 }
 
-/** Signed URLs for moments, keyed by moment id. */
-export async function signMomentPhotos(momentIds: readonly string[]): Promise<Map<string, string>> {
-  const ids = [...new Set(momentIds)];
-  if (ids.length === 0) return new Map();
-
-  const supabase = await createClient();
-  const { data, error } = await supabase.from("moments").select("id, photo_path").in("id", ids);
-
-  if (error || !data) {
-    console.error("Could not read moment photo paths", error);
-    return new Map();
-  }
-
-  const rows = data as { id: string; photo_path: string }[];
-  const signed = await signPaths(rows.map((row) => row.photo_path));
-
+/** Signed URLs for moments, keyed by moment id. Callers pass rows a policy already returned. */
+export async function signMomentPhotos(
+  moments: readonly { id: string; photoPath: string }[],
+): Promise<Map<string, string>> {
+  const signed = await signPaths(moments.map((m) => m.photoPath));
   const byMomentId = new Map<string, string>();
-  for (const row of rows) {
-    const url = signed.get(row.photo_path);
-    if (url) byMomentId.set(row.id, url);
+  for (const m of moments) {
+    const url = signed.get(m.photoPath);
+    if (url) byMomentId.set(m.id, url);
   }
   return byMomentId;
 }
 
 /** Signed cover photos for city collections, keyed by collection id. */
 export async function signCollectionCovers(
-  collectionIds: readonly string[],
+  collections: readonly { id: string; coverPhotoPath: string | null }[],
 ): Promise<Map<string, string>> {
-  const ids = [...new Set(collectionIds)];
-  if (ids.length === 0) return new Map();
-
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("user_cities")
-    .select("id, cover_photo_path")
-    .in("id", ids)
-    .not("cover_photo_path", "is", null);
-
-  if (error || !data) {
-    console.error("Could not read collection cover paths", error);
-    return new Map();
-  }
-
-  const rows = data as { id: string; cover_photo_path: string }[];
-  const signed = await signPaths(rows.map((row) => row.cover_photo_path));
-
+  const covered = collections.filter(
+    (c): c is { id: string; coverPhotoPath: string } => c.coverPhotoPath !== null,
+  );
+  const signed = await signPaths(covered.map((c) => c.coverPhotoPath));
   const byCollectionId = new Map<string, string>();
-  for (const row of rows) {
-    const url = signed.get(row.cover_photo_path);
-    if (url) byCollectionId.set(row.id, url);
+  for (const c of covered) {
+    const url = signed.get(c.coverPhotoPath);
+    if (url) byCollectionId.set(c.id, url);
   }
   return byCollectionId;
 }

@@ -3,10 +3,11 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { MomentPhoto } from "@/components/moments/moment-photo";
 import { buttonStyles } from "@/components/ui/button";
-import { getCurrentUser } from "@/lib/auth/profile";
+import { getSession } from "@/lib/auth/profile";
 import { LOGIN_PATH } from "@/lib/auth/routes";
 import { formatCollectionSpan, formatMomentCount, formatMomentDate } from "@/lib/moments/format";
 import { getPlace } from "@/lib/moments/queries";
+import styles from "../../app.module.css";
 
 export const metadata: Metadata = {
   title: "Place · roamr",
@@ -17,18 +18,18 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export default async function PlacePage({ params }: { params: Promise<{ cityId: string }> }) {
   const { cityId } = await params;
 
-  const current = await getCurrentUser();
-  if (!current) redirect(LOGIN_PATH);
+  const session = await getSession();
+  if (!session) redirect(LOGIN_PATH);
 
   if (!UUID.test(cityId)) notFound();
 
-  const place = await getPlace(current.id, cityId);
+  const place = await getPlace(session.id, cityId);
   if (!place) notFound();
 
   const span = formatCollectionSpan(place.collection.firstMomentAt, place.collection.lastMomentAt);
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className={styles.page}>
       <div className="flex flex-col gap-2">
         <Link href="/places" className="text-muted w-fit text-sm hover:underline">
           ← Places
@@ -48,7 +49,7 @@ export default async function PlacePage({ params }: { params: Promise<{ cityId: 
           </Link>
         </div>
       ) : (
-        <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        <ul className={styles.collectionGrid}>
           {place.moments.map((moment, index) => (
             <li key={moment.id}>
               <Link

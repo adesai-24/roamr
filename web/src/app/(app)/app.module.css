@@ -1,0 +1,369 @@
+.shell {
+  --radius: 0.4rem;
+  min-height: 100dvh;
+}
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  border-bottom: 1px solid var(--border);
+  background: var(--background);
+}
+
+.headerInner {
+  max-width: 1240px;
+  min-height: 88px;
+  margin: auto;
+  padding: 16px 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 32px;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: -2px;
+}
+
+.brand span {
+  color: var(--accent);
+  font-size: 26px;
+}
+.desktopNav {
+  margin-right: auto;
+  margin-left: 24px;
+}
+.account {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.accountLink {
+  display: grid;
+  place-items: center;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 50%;
+}
+.accountName {
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+}
+
+.navList {
+  display: flex;
+  align-items: stretch;
+  gap: 24px;
+}
+.navLink {
+  position: relative;
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 500;
+  transition: color 160ms ease;
+}
+.navLink::after {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--accent);
+  content: "";
+  transform: scaleX(0);
+  transition: transform 160ms ease;
+}
+.navLink:hover,
+.navLink[aria-current="page"] {
+  color: var(--foreground);
+}
+.navLink[aria-current="page"]::after {
+  transform: scaleX(1);
+}
+.shell a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 5px;
+}
+
+.content {
+  width: 100%;
+  max-width: 1120px;
+  margin: auto;
+  padding: 56px 40px 80px;
+  animation: appear 220ms ease-out;
+}
+.content h1 {
+  overflow-wrap: anywhere;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(34px, 4vw, 48px);
+  font-weight: 400;
+  line-height: 1.15;
+  letter-spacing: -1.7px;
+}
+.content p {
+  line-height: 1.65;
+}
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+}
+.pageHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  padding-bottom: 28px;
+  border-bottom: 1px solid var(--border);
+}
+.pageHeader > div:first-child {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.pageHeader p {
+  max-width: 440px;
+}
+.narrow {
+  max-width: 700px;
+  margin-inline: auto;
+}
+.feedList {
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
+}
+.feedItem {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-bottom: 32px;
+  border-bottom: 1px solid var(--border);
+}
+.feedMeta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.feedAuthor {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.photoLink {
+  display: block;
+  overflow: hidden;
+  border-radius: 4px;
+}
+.photoLink img {
+  transition: transform 240ms ease;
+}
+.photoLink:hover img {
+  transform: scale(1.015);
+}
+.collectionGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 36px 24px;
+}
+.tripGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 40px 28px;
+}
+.collectionLink {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.collectionLink > img,
+.collectionLink > [role="img"] {
+  border-radius: 4px;
+  transition: opacity 180ms ease;
+}
+.collectionLink:hover > img {
+  opacity: 0.9;
+}
+.collectionCaption {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.collectionTitle {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 24px;
+  line-height: 1.2;
+  letter-spacing: -0.5px;
+}
+.empty {
+  padding: 48px 0;
+  max-width: 480px;
+}
+.empty h2 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 400;
+  font-size: 28px;
+  margin-bottom: 12px;
+}
+.empty p {
+  color: var(--muted);
+  font-size: 14px;
+  margin-bottom: 24px;
+}
+.settings {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+.content :global([data-slot="card"]) {
+  border: 0;
+  border-top: 1px solid var(--border);
+  border-radius: 0;
+  background: transparent;
+  padding: 28px 0 0;
+}
+.content .pageHeader + :global([data-slot="card"]) {
+  border-top: 0;
+  padding-top: 0;
+}
+.peopleList {
+  border-block: 1px solid var(--border);
+}
+.peopleList > li + li {
+  border-top: 1px solid var(--border);
+}
+.momentImage {
+  border-radius: 4px;
+  max-height: 75vh;
+  object-fit: contain;
+}
+.mobileNav {
+  display: none;
+}
+.skip {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  z-index: 30;
+  padding: 12px 20px;
+  background: var(--surface);
+  transform: translateY(-150%);
+}
+.skip:focus {
+  transform: translateY(0);
+}
+
+@keyframes appear {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (max-width: 1000px) {
+  .headerInner {
+    gap: 20px;
+    padding-inline: 24px;
+  }
+  .desktopNav {
+    margin-left: 0;
+  }
+  .navList {
+    gap: 18px;
+  }
+  .accountName {
+    display: none;
+  }
+}
+@media (max-width: 700px) {
+  .headerInner {
+    min-height: 72px;
+    padding: 12px 20px;
+  }
+  .brand {
+    font-size: 29px;
+  }
+  .desktopNav {
+    display: none;
+  }
+  .content {
+    padding: 32px 20px calc(96px + env(safe-area-inset-bottom));
+  }
+  .page {
+    gap: 28px;
+  }
+  .pageHeader {
+    flex-wrap: wrap;
+    gap: 20px;
+    padding-bottom: 24px;
+  }
+  .pageHeader > div:first-child {
+    gap: 8px;
+  }
+  .collectionGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 28px 16px;
+  }
+  .tripGrid {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+  .collectionTitle {
+    font-size: 22px;
+  }
+  .collectionCaption {
+    gap: 4px;
+  }
+  .mobileNav {
+    display: block;
+    position: fixed;
+    bottom: 0;
+    inset-inline: 0;
+    z-index: 20;
+    border-top: 1px solid var(--border);
+    background: var(--background);
+    padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
+  }
+  .mobileNav .navList {
+    justify-content: space-around;
+    gap: 8px;
+  }
+  .mobileNav .navLink {
+    padding-inline: 8px;
+  }
+  .empty {
+    padding: 24px 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .content {
+    animation: none;
+  }
+  .navLink,
+  .navLink::after,
+  .photoLink img,
+  .collectionLink > img {
+    transition: none;
+  }
+  .photoLink:hover img {
+    transform: none;
+  }
+}

@@ -80,7 +80,7 @@ export async function listTrips(): Promise<TripSummary[]> {
     citiesByTrip.set(moment.tripId, names);
   }
 
-  const signed = await signMomentPhotos([...coverByTrip.values()].map((m) => m.id));
+  const signed = await signMomentPhotos([...coverByTrip.values()]);
 
   return trips.map((trip) => ({
     ...trip,
@@ -109,7 +109,7 @@ export async function getTrip(tripId: string): Promise<TripDetail | null> {
     .order("taken_at", { ascending: true });
 
   const moments = (momentRows ?? []) as unknown as MomentJoinRow[];
-  const signed = await signMomentPhotos(moments.map((m) => m.id));
+  const signed = await signMomentPhotos(moments);
 
   // Insertion-ordered.
   const groups = new Map<string, TripCityGroup>();
@@ -145,7 +145,7 @@ export async function listAssignableMoments(
   if (error) throw new Error(`Could not load your moments: ${error.message}`);
 
   const moments = (data ?? []) as unknown as MomentJoinRow[];
-  const signed = await signMomentPhotos(moments.map((m) => m.id));
+  const signed = await signMomentPhotos(moments);
 
   return moments.map((row) => ({
     id: row.id,

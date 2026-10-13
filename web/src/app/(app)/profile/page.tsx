@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { getCurrentUser } from "@/lib/auth/profile";
 import { LOGIN_PATH } from "@/lib/auth/routes";
 import { DisplayNameForm, VisibilityForm } from "./profile-forms";
+import styles from "../app.module.css";
 
 export const metadata: Metadata = {
   title: "Profile · roamr",
@@ -22,7 +23,7 @@ export default async function ProfilePage() {
   const username = profile?.username ?? "";
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className={`${styles.settings} ${styles.narrow}`}>
       <div className="flex items-center gap-4">
         <Avatar name={displayName || username} size="lg" />
         <div className="flex min-w-0 flex-col">
@@ -48,9 +49,7 @@ export default async function ProfilePage() {
       <Card>
         <CardHeader>
           <CardTitle>Privacy</CardTitle>
-          <CardDescription>
-            Friends-only is the default. Going public is something you turn on deliberately.
-          </CardDescription>
+          <CardDescription>Choose who can see your profile.</CardDescription>
         </CardHeader>
         <CardContent>
           <VisibilityForm isPublic={profile?.isPublic ?? false} />

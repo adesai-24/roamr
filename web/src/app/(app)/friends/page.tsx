@@ -2,32 +2,36 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { Avatar } from "@/components/ui/avatar";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { getCurrentUser } from "@/lib/auth/profile";
+import { getCurrentUser, getSession } from "@/lib/auth/profile";
 import { LOGIN_PATH } from "@/lib/auth/routes";
 import { getFriendsOverview } from "@/lib/friends/queries";
 import type { FriendPerson } from "@/lib/friends/types";
 import { AddFriendForm } from "./add-friend-form";
 import { FriendActions, type FriendRowVariant } from "./friend-actions";
+import styles from "../app.module.css";
 
 export const metadata: Metadata = {
   title: "Friends · roamr",
 };
 
 export default async function FriendsPage() {
-  // The layout above has already established there is a session.
-  const current = await getCurrentUser();
-  if (!current) redirect(LOGIN_PATH);
+  const session = await getSession();
+  if (!session) redirect(LOGIN_PATH);
 
-  const { friends, incoming, outgoing } = await getFriendsOverview(current.id);
-  const ownUsername = current.profile?.username ?? null;
+  // The profile is the layout's query too, so awaiting it here costs nothing extra.
+  const [current, { friends, incoming, outgoing }] = await Promise.all([
+    getCurrentUser(),
+    getFriendsOverview(session.id),
+  ]);
+  const ownUsername = current?.profile?.username ?? null;
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold tracking-tight">Friends</h1>
-        <p className="text-muted text-sm">
-          Everything you post is visible to these people and nobody else.
-        </p>
+    <div className={`${styles.page} ${styles.narrow}`}>
+      <div className={styles.pageHeader}>
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Friends</h1>
+          <p className="text-muted text-sm">Manage your friends and requests.</p>
+        </div>
       </div>
 
       <Card>
@@ -51,7 +55,7 @@ export default async function FriendsPage() {
         count={incoming.length}
         people={incoming}
         variant="incoming"
-        empty="Nobody is waiting on you. Requests people send you show up here."
+        empty="No incoming requests."
       />
 
       <PeopleSection
@@ -59,7 +63,7 @@ export default async function FriendsPage() {
         count={outgoing.length}
         people={outgoing}
         variant="outgoing"
-        empty="You have not asked anyone yet."
+        empty="No pending requests."
       />
 
       <PeopleSection
@@ -92,7 +96,7 @@ function PeopleSection({ title, count, people, variant, empty }: PeopleSectionPr
       {people.length === 0 ? (
         <p className="text-muted text-sm">{empty}</p>
       ) : (
-        <ul className="border-border bg-surface rounded-card divide-border divide-y border">
+        <ul className={styles.peopleList}>
           {people.map((person) => (
             <PersonRow key={person.userId} person={person} variant={variant} />
           ))}

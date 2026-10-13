@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { CityAutocomplete } from "@/components/city-autocomplete";
+import { GooglePhotosPicker } from "@/components/moments/google-photos-picker";
 import { MomentPhoto } from "@/components/moments/moment-photo";
 import { PinField } from "@/components/moments/pin-field";
 import type { Coordinates } from "@/components/moments/pin-map";
@@ -29,7 +30,7 @@ interface SelectedCity {
 
 type Status = "empty" | "reading" | "ready" | "saving";
 
-export function NewMomentForm() {
+export function NewMomentForm({ googlePhotosClientId }: { googlePhotosClientId?: string }) {
   const router = useRouter();
   const captionId = useId();
 
@@ -56,23 +57,10 @@ export function NewMomentForm() {
     [],
   );
 
-  const handleFile = async (file: File) => {
-    setStatus("reading");
-    setError(null);
-    setNotice(null);
+  const handlePhoto = async (prepared: PreparedPhoto) => {
+    setCity(null);
     setPin(null);
-
-    let prepared: PreparedPhoto;
-    try {
-      prepared = await preparePhoto(file);
-    } catch (cause) {
-      replacePreview(null);
-      setPhoto(null);
-      setStatus("empty");
-      setError(cause instanceof Error ? cause.message : "That file could not be read as a photo.");
-      return;
-    }
-
+    setNotice(null);
     setPhoto(prepared);
     replacePreview(URL.createObjectURL(prepared.blob));
 
@@ -92,6 +80,26 @@ export function NewMomentForm() {
     }
 
     setStatus("ready");
+  };
+
+  const handleFile = async (file: File) => {
+    setStatus("reading");
+    setError(null);
+    setNotice(null);
+    setPin(null);
+
+    let prepared: PreparedPhoto;
+    try {
+      prepared = await preparePhoto(file);
+    } catch (cause) {
+      replacePreview(null);
+      setPhoto(null);
+      setStatus("empty");
+      setError(cause instanceof Error ? cause.message : "That file could not be read as a photo.");
+      return;
+    }
+
+    await handlePhoto(prepared);
   };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -158,7 +166,7 @@ export function NewMomentForm() {
           id="moment-photo"
           type="file"
           // No `capture`.
-          accept="image/*"
+          accept="image/*,.heic,.heif"
           disabled={busy}
           onChange={(event) => {
             const file = event.target.files?.[0];
@@ -170,6 +178,17 @@ export function NewMomentForm() {
           Photos are resized in your browser before they upload, which also strips the location out
           of the file itself.
         </p>
+        <GooglePhotosPicker
+          clientId={googlePhotosClientId}
+          disabled={busy}
+          onPhotos={(photos) => {
+            const first = photos[0];
+            if (first) void handlePhoto(first);
+          }}
+          onBusyChange={(googleBusy) => {
+            if (googleBusy) setStatus("reading");
+          }}
+        />
       </div>
 
       {status === "reading" ? (

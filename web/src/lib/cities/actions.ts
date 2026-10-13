@@ -3,8 +3,9 @@
 import { z } from "zod";
 import { getGeocodingProvider } from "@/lib/geocoding";
 import type { GeocodeResult } from "@/lib/geocoding/types";
+import { isRateLimited } from "@/lib/rate-limit";
 import { createClient } from "@/lib/supabase/server";
-import { findCityByProviderPlaceId, resolveCity } from "./resolve";
+import { findCityByProviderPlaceId, resolveVerifiedCity } from "./resolve";
 import type { CityActionResult, CityRow } from "./types";
 
 /** How many suggestions the picker shows. */
@@ -51,6 +52,10 @@ export async function searchCitiesAction(
   const auth = await requireUserId();
   if (!auth.ok) return auth;
 
+  if (isRateLimited(`city-search:${auth.data}`, 60, 60_000)) {
+    return { ok: false, error: "Searching too fast. Wait a moment and try again." };
+  }
+
   const parsed = searchQuerySchema.safeParse(query);
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0]?.message ?? "That search is not valid." };
@@ -87,7 +92,9 @@ export async function resolveCityAction(
       return { ok: true, data: existing };
     }
 
-    return { ok: true, data: await resolveCity(parsed.data) };
+    const city = await resolveVerifiedCity(parsed.data);
+    if (!city) return { ok: false, error: "That city is not valid." };
+    return { ok: true, data: city };
   } catch (cause) {
     console.error("City resolution failed", cause);
     return { ok: false, error: "Could not save that city. Try again in a moment." };
