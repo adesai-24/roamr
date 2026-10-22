@@ -3,6 +3,7 @@ import {
   APP_HOME_PATH,
   LOGIN_PATH,
   ONBOARDING_PATH,
+  callbackPathForRootParams,
   isPublicPath,
   loginPathFor,
   requiresSession,
@@ -120,5 +121,28 @@ describe("safeRedirectPath", () => {
 
   it("honours a caller-supplied fallback", () => {
     expect(safeRedirectPath("https://evil.example", ORIGIN, ONBOARDING_PATH)).toBe(ONBOARDING_PATH);
+  });
+});
+
+describe("callbackPathForRootParams", () => {
+  it("forwards an OAuth code that landed on the site root", () => {
+    expect(callbackPathForRootParams({ code: "abc123" })).toBe("/auth/callback?code=abc123");
+  });
+
+  it("forwards provider errors so the callback can explain them", () => {
+    expect(callbackPathForRootParams({ error: "access_denied", error_code: "otp_expired" })).toBe(
+      "/auth/callback?error=access_denied&error_code=otp_expired",
+    );
+  });
+
+  it("takes the first value of a repeated param and drops unrelated ones", () => {
+    expect(callbackPathForRootParams({ code: ["a", "b"], utm_source: "x" })).toBe(
+      "/auth/callback?code=a",
+    );
+  });
+
+  it("leaves a plain landing visit alone", () => {
+    expect(callbackPathForRootParams({})).toBeNull();
+    expect(callbackPathForRootParams({ utm_source: "x" })).toBeNull();
   });
 });

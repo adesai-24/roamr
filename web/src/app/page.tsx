@@ -1,7 +1,12 @@
 import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { APP_HOME_PATH, LOGIN_PATH, ONBOARDING_PATH } from "@/lib/auth/routes";
+import {
+  APP_HOME_PATH,
+  LOGIN_PATH,
+  ONBOARDING_PATH,
+  callbackPathForRootParams,
+} from "@/lib/auth/routes";
 import { createClient } from "@/lib/supabase/server";
 import styles from "./landing.module.css";
 
@@ -9,7 +14,14 @@ export const dynamic = "force-dynamic";
 
 const signupPath = `${LOGIN_PATH}?next=${encodeURIComponent(ONBOARDING_PATH)}`;
 
-export default async function Home() {
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const callbackPath = callbackPathForRootParams(await searchParams);
+  if (callbackPath) redirect(callbackPath);
+
   const supabase = await createClient();
   const { data } = await supabase.auth.getClaims();
   if (data?.claims) redirect(APP_HOME_PATH);
