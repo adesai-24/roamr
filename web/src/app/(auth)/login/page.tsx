@@ -1,10 +1,16 @@
 import type { Metadata } from "next";
-import { safeRedirectPath } from "@/lib/auth/routes";
+import Link from "next/link";
+import { LOGIN_PATH, ONBOARDING_PATH, safeRedirectPath } from "@/lib/auth/routes";
 import { LoginForm } from "./login-form";
 
-export const metadata: Metadata = {
-  title: "Sign in · roamr",
-};
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}): Promise<Metadata> {
+  const signup = firstValue((await searchParams).mode) === "signup";
+  return { title: signup ? "Sign up · roamr" : "Log in · roamr" };
+}
 
 /** Failure codes the callback can hand back. */
 const CALLBACK_ERRORS: Record<string, string> = {
@@ -23,22 +29,36 @@ export default async function LoginPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const params = await searchParams;
+  const signup = firstValue(params.mode) === "signup";
   const next = safeRedirectPath(firstValue(params.next));
+  const switchPath = signup
+    ? LOGIN_PATH
+    : `${LOGIN_PATH}?mode=signup&next=${encodeURIComponent(ONBOARDING_PATH)}`;
 
   const errorCode = firstValue(params.error);
   const initialError = errorCode ? (CALLBACK_ERRORS[errorCode] ?? GENERIC_ERROR) : undefined;
 
   return (
-    <main className="flex flex-col gap-6">
-      <div className="flex flex-col gap-2">
-        <h1 className="text-2xl font-semibold tracking-tight">Sign in</h1>
-        <p className="text-muted text-sm">
-          Brag about touching grass to only your friends. Sign in with Google, an email link, or
-          your password.
+    <main className="flex flex-col gap-8">
+      <div className="flex flex-col gap-3">
+        <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">
+          {signup ? "Sign up to roamr" : "Log in to roamr"}
+        </h1>
+        <p className="text-muted text-lg">
+          {signup
+            ? "Collect the places you go. Share the moments with your people."
+            : "Brag about touching grass to only your friends."}
         </p>
       </div>
 
-      <LoginForm next={next} initialError={initialError} />
+      <LoginForm mode={signup ? "signup" : "login"} next={next} initialError={initialError} />
+
+      <p className="text-muted text-base">
+        {signup ? "Already on roamr? " : "New to roamr? "}
+        <Link href={switchPath} className="text-accent font-medium underline underline-offset-4">
+          {signup ? "Log in" : "Sign up"}
+        </Link>
+      </p>
     </main>
   );
 }

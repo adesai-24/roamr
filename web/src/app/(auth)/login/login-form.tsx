@@ -9,38 +9,55 @@ import { requestMagicLink, signInWithGoogle, signInWithPassword, type LoginState
 
 const EMAIL_FIELD_ID = "login-email";
 
-export function LoginForm({ next, initialError }: { next: string; initialError?: string }) {
-  const [method, setMethod] = useState<"link" | "password">("link");
+export function LoginForm({
+  next,
+  initialError,
+  mode = "login",
+}: {
+  next: string;
+  initialError?: string;
+  mode?: "login" | "signup";
+}) {
+  const [chosen, setChosen] = useState<"link" | "password">("link");
+  // A password can only sign in to an existing account, so sign-up is Google or an email link.
+  const method = mode === "signup" ? "link" : chosen;
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-6">
       <form action={signInWithGoogle}>
         <input type="hidden" name="next" value={next} />
-        <Button type="submit" size="lg" fullWidth variant="secondary">
+        <Button type="submit" size="lg" fullWidth variant="secondary" className="min-h-14">
           Continue with Google
         </Button>
       </form>
-      <div className="flex gap-2" role="group" aria-label="Sign-in method">
-        <Button
-          type="button"
-          variant={method === "link" ? "primary" : "secondary"}
-          aria-pressed={method === "link"}
-          onClick={() => setMethod("link")}
-        >
-          Email link
-        </Button>
-        <Button
-          type="button"
-          variant={method === "password" ? "primary" : "secondary"}
-          aria-pressed={method === "password"}
-          onClick={() => setMethod("password")}
-        >
-          Password
-        </Button>
-      </div>
+      {mode === "login" && (
+        <div className="flex gap-2" role="group" aria-label="Sign-in method">
+          <Button
+            type="button"
+            size="lg"
+            className="flex-1"
+            variant={method === "link" ? "primary" : "secondary"}
+            aria-pressed={method === "link"}
+            onClick={() => setChosen("link")}
+          >
+            Email link
+          </Button>
+          <Button
+            type="button"
+            size="lg"
+            className="flex-1"
+            variant={method === "password" ? "primary" : "secondary"}
+            aria-pressed={method === "password"}
+            onClick={() => setChosen("password")}
+          >
+            Password
+          </Button>
+        </div>
+      )}
       <LoginMethodForm
         key={method}
         next={next}
         method={method}
+        mode={mode}
         initialError={method === "link" ? initialError : undefined}
       />
     </div>
@@ -51,10 +68,12 @@ function LoginMethodForm({
   next,
   initialError,
   method,
+  mode,
 }: {
   next: string;
   initialError?: string;
   method: "link" | "password";
+  mode: "login" | "signup";
 }) {
   const initialState: LoginState = initialError
     ? { status: "error", message: initialError }
@@ -94,7 +113,7 @@ function LoginMethodForm({
   const error = state.status === "error" ? state.message : undefined;
 
   return (
-    <form action={formAction} className="flex flex-col gap-4" noValidate>
+    <form action={formAction} className="flex flex-col gap-5" noValidate>
       <input type="hidden" name="next" value={next} />
 
       <Field
@@ -117,6 +136,7 @@ function LoginMethodForm({
           autoCorrect="off"
           spellCheck={false}
           placeholder="you@example.com"
+          className="min-h-14"
           required
           aria-invalid={error ? true : undefined}
           aria-describedby={fieldDescribedBy(EMAIL_FIELD_ID, { hint: true, error })}
@@ -130,19 +150,22 @@ function LoginMethodForm({
             name="password"
             type="password"
             autoComplete="current-password"
+            className="min-h-14"
             required
           />
         </Field>
       )}
 
-      <Button type="submit" size="lg" fullWidth disabled={pending}>
+      <Button type="submit" size="lg" fullWidth disabled={pending} className="min-h-14">
         {method === "password"
           ? pending
             ? "Signing in…"
             : "Sign in with password"
           : pending
             ? "Sending…"
-            : "Send sign-in link"}
+            : mode === "signup"
+              ? "Send sign-up link"
+              : "Send sign-in link"}
       </Button>
     </form>
   );
