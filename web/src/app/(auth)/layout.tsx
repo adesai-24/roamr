@@ -15,18 +15,18 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       </div>
       <aside className="relative hidden lg:block" aria-hidden="true">
         <Image
-          src="/landing/zion.jpg"
+          src="/landing/bhutan.jpg"
           alt=""
           fill
           sizes="50vw"
           className="object-cover object-[center_60%]"
           priority
         />
+        {/* The road and path are light grey, so the gradient keeps the caption readable. */}
+        <div className="from-foreground/60 absolute inset-0 bg-linear-to-t via-transparent to-transparent" />
         <div className="text-background absolute right-12 bottom-12 left-12">
           <p className="text-2xl font-medium tracking-tight">A little further. A little closer.</p>
-          <p className="mt-2 text-sm tracking-wide uppercase opacity-80">
-            Zion National Park, Utah, USA
-          </p>
+          <p className="mt-2 text-sm tracking-wide uppercase opacity-80">Bhutan</p>
         </div>
       </aside>
     </div>
