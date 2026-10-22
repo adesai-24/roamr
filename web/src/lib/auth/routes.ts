@@ -29,6 +29,20 @@ export function loginPathFor(pathname: string, search = ""): string {
   return `${LOGIN_PATH}?next=${encodeURIComponent(`${pathname}${search}`)}`;
 }
 
+/** Supabase falls back to the site root when redirectTo is not on its allow list; hand that to the callback. */
+export function callbackPathForRootParams(
+  params: Record<string, string | string[] | undefined>,
+): string | null {
+  const forwarded = new URLSearchParams();
+  for (const key of ["code", "error", "error_code", "error_description"]) {
+    const raw = params[key];
+    const value = Array.isArray(raw) ? raw[0] : raw;
+    if (value) forwarded.set(key, value);
+  }
+  if (!forwarded.has("code") && !forwarded.has("error")) return null;
+  return `${AUTH_CALLBACK_PATH}?${forwarded.toString()}`;
+}
+
 export function safeRedirectPath(
   candidate: string | null | undefined,
   origin?: string | null,
