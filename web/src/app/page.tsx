@@ -102,8 +102,8 @@ export default async function Home({
         <div className={styles.details}>
           <figure className={styles.photo}>
             <Image
-              src="/landing/mountain.jpg"
-              alt="A sunlit mountain peak rising above a green alpine valley."
+              src="/landing/cefalu.jpg"
+              alt="Weathered stone houses above a small sandy beach in Cefalù, with green hills across the bay."
               width={1000}
               height={1250}
               sizes="(max-width: 700px) 90vw, 45vw"
