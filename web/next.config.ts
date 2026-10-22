@@ -10,11 +10,9 @@ const CONTENT_SECURITY_POLICY = [
 ].join("; ");
 
 const nextConfig: NextConfig = {
-  // Emits a self-contained server bundle with only the node_modules actually
-  // reached. Vercel ignores this; Docker and Kubernetes depend on it, and having
-  // it from the start is what keeps the cluster path a config change rather than
-  // a rewrite.
-  output: "standalone",
+  // Self-contained server bundle for Docker and Kubernetes. Skipped on Vercel, whose build
+  // step fails with ENOENT on .next/next-server.js.nft.json when standalone is on.
+  output: process.env.VERCEL ? undefined : "standalone",
   outputFileTracingRoot: process.cwd(),
   poweredByHeader: false,
   async headers() {
