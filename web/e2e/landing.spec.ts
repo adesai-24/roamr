@@ -5,7 +5,7 @@ test("landing account links use the existing email flow", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "roamr", exact: true })).toBeVisible();
   const signup = page.getByRole("link", { name: "Create an account" }).first();
   await signup.click();
-  await expect(page).toHaveURL(/\/login\?next=%2Fonboarding$/);
+  await expect(page).toHaveURL(/\/login\?mode=signup&next=%2Fonboarding$/);
   await expect(page.getByLabel("Email")).toBeVisible();
   await page.goto("/");
   await page.getByRole("link", { name: "Sign in", exact: true }).click();

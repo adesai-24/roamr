@@ -35,3 +35,10 @@ it("switches between password and email-link sign-in and submits the matching ac
   await waitFor(() => expect(requestMagicLink).toHaveBeenCalledOnce());
   expect(await screen.findByText("Check your email")).toBeVisible();
 });
+
+it("offers only Google and an email link when signing up", () => {
+  render(<LoginForm mode="signup" next="/onboarding" />);
+  expect(screen.getByRole("button", { name: "Continue with Google" })).toBeVisible();
+  expect(screen.getByRole("button", { name: "Send sign-up link" })).toBeVisible();
+  expect(screen.queryByRole("button", { name: "Password" })).not.toBeInTheDocument();
+});

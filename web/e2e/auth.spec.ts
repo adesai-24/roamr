@@ -7,7 +7,7 @@ test("the signed-out landing page offers a way in", async ({ page }) => {
 
 test("the login page asks for an email and nothing else", async ({ page }) => {
   await page.goto("/login");
-  await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Log in to roamr" })).toBeVisible();
   await expect(page.getByLabel("Email")).toBeVisible();
   await expect(page.getByRole("button", { name: "Send sign-in link" })).toBeVisible();
 });

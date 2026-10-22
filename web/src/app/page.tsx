@@ -12,7 +12,7 @@ import styles from "./landing.module.css";
 
 export const dynamic = "force-dynamic";
 
-const signupPath = `${LOGIN_PATH}?next=${encodeURIComponent(ONBOARDING_PATH)}`;
+const signupPath = `${LOGIN_PATH}?mode=signup&next=${encodeURIComponent(ONBOARDING_PATH)}`;
 
 export default async function Home({
   searchParams,
